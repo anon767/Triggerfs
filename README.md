@@ -8,5 +8,5 @@ Call and hook into functions by accessing,opening,reading,... certain files.
 
 ```
 go build
-./configurablefs mountpoint/ test/
+./configurablefs mountpoint/ tests/
 ```
