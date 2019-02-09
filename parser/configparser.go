@@ -24,6 +24,7 @@ func Parseconfig(configfile string) (events []event) {
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	json.Unmarshal(byteValue, &events)
+	return events
 }
 
 func ExecFile(file string) string {

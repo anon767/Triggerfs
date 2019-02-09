@@ -26,4 +26,5 @@ func (me *CFS) Open(name string, flags uint32, context *fuse.Context) (file node
 		return nodefs.NewDataFile([]byte(parser.ExecFile(exec))), fuse.OK
 	}
 	//base case
+	return me.FileSystem.Open(name, flags, context)
 }
