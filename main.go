@@ -1,7 +1,7 @@
 package main
 
 import (
-	"configurablefs/domain"
+	"configurablefs/filesystem"
 	"flag"
 	"fmt"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
@@ -16,15 +16,15 @@ func main() {
 		log.Fatal("Usage:\n  configurablefs MOUNTPOINT FOLDER")
 	}
 
-	orig := flag.Arg(0)
-	fmt.Printf("%s is mirrored\n", orig)
-	nfs := pathfs.NewPathNodeFs(&domain.CFS{FileSystem: pathfs.NewLoopbackFileSystem(orig)}, nil)
-	dest := flag.Arg(1)
-	server, _, err := nodefs.MountRoot(dest, nfs.Root(), nil)
+	destinationRoot := flag.Arg(0)
+	fmt.Printf("%s is mirrored\n", destinationRoot)
+	nfs := pathfs.NewPathNodeFs(&filesystem.CFS{FileSystem: pathfs.NewLoopbackFileSystem(destinationRoot)}, nil)
+	mountpoint := flag.Arg(1)
+	server, _, err := nodefs.MountRoot(mountpoint, nfs.Root(), nil)
 	if err != nil {
 		log.Fatalf("Mount fail: %v\n", err)
 	}
-	fmt.Printf("%s is mountpoint\n", dest)
+	fmt.Printf("%s is mountpoint\n", mountpoint)
 
 	server.Serve()
 }

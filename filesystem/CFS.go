@@ -1,4 +1,4 @@
-package domain
+package filesystem
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ act as Loopback FS and eventually call a hooked method depending on maaybe confi
 */
 
 type CFS struct {
-	 pathfs.FileSystem
+	pathfs.FileSystem
 }
 
 func (me *CFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntry, code fuse.Status) {
