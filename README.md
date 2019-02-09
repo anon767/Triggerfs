@@ -7,6 +7,7 @@ Call and hook into functions by accessing,opening,reading,... certain files.
 # Usage
 
 ```
+go get
 go build
 mkdir mountpoint
 mkdir test
