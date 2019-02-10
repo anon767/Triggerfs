@@ -3,6 +3,19 @@
 An overlay for your FS using Go and Fuse native binding.
 Call and hook into functions by accessing,opening,reading,... certain files.
 
+# Config
+
+create a config.json file, the structure of the contents should look like this:
+
+```
+[
+  {
+    "permission": "0777",
+    "Pattern": ".*",
+    "Exec": "/home/tom/go/src/configurablefs/bla.sh"
+  }
+]
+```
 
 # Usage
 
@@ -12,8 +25,13 @@ go build
 mkdir mountpoint
 mkdir test
 ./configurablefs test/ mountpoint/ &
-cd test
-ls -la
+cd mountpoint
+echo test > test
+cat test
+```
+
+# Clean up
+```
 cd ..
 sudo umount mountpoint
 ```

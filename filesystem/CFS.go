@@ -20,10 +20,10 @@ type CFS struct {
 }
 
 func (me *CFS) Open(name string, flags uint32, context *fuse.Context) (file nodefs.File, code fuse.Status) {
-	events := parser.Parseconfig("test.json")
-	exec, matched := parser.MatchFile(name, events)
+	events := parser.Parseconfig("config.json")
+	matchedEvent, matched := parser.EventsMatchFile(name, events)
 	if matched {
-		return nodefs.NewDataFile([]byte(parser.ExecFile(exec))), fuse.OK
+		return nodefs.NewDataFile([]byte(matchedEvent.ExecFile(name))), fuse.OK
 	}
 	//base case
 	return me.FileSystem.Open(name, flags, context)
