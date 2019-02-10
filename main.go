@@ -13,7 +13,7 @@ func main() {
 
 	flag.Parse()
 	if len(flag.Args()) < 2 {
-		log.Fatal("Usage:\n  configurablefs MOUNTPOINT FOLDER")
+		log.Fatal("Usage:\n  configurablefs ROOT MOUNTPOINT")
 	}
 
 	destinationRoot := flag.Arg(0)
