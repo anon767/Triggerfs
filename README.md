@@ -12,6 +12,7 @@ create a config.json file, the structure of the contents should look like this:
   {
     "permission": "0777",
     "Pattern": ".*",
+    "Path": "test.txt",
     "Exec": "/home/tom/go/src/configurablefs/bla.sh"
   }
 ]

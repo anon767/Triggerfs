@@ -23,7 +23,7 @@ func (me *CFS) Open(name string, flags uint32, context *fuse.Context) (file node
 	events := parser.Parseconfig("config.json")
 	matchedEvent, matched := parser.EventsMatchFile(name, events)
 	if matched {
-		return nodefs.NewDataFile([]byte(matchedEvent.ExecFile(name))), fuse.OK
+		return nodefs.NewDataFile([]byte(matchedEvent.ExecCmd(name))), fuse.OK
 	}
 	//base case
 	return me.FileSystem.Open(name, flags, context)

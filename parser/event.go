@@ -9,10 +9,9 @@ import (
 	"os/exec"
 	"regexp"
 )
-import "github.com/davecgh/go-spew/spew"
 
 type Event struct {
-	Path       string `json:"path"`
+	Path       string `json:"path"` // maybe drop Pattern?
 	Permission string `json:"permission"`
 	Pattern    string `json:"pattern"`
 	Exec       string `json:"exec"`
@@ -26,28 +25,29 @@ func Parseconfig(configfile string) (events []Event) {
 	}
 	defer jsonFile.Close()
 	byteValue, err := ioutil.ReadAll(jsonFile)
-	
+
 	if err != nil {
 		fmt.Println("read:", err)
 	}
-	
+
 	err = json.Unmarshal(byteValue, &events)
 	if err != nil {
 		fmt.Println("unmarshall error:", err)
 	}
-	spew.Dump(events)
+
 	return events
 }
 
-func (event Event) ExecCmd(cmd string) string {
-	out, err := exec.Command("sh", "-c", cmd).Output()
+func (event Event) ExecCmd(filename string) string {
+	// ignore filename, it can be a parameter or something in the future
+	out, err := exec.Command("sh", "-c", event.Exec).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
 	return string(out)
 }
 
-func (event Event) MatchFile(file string) bool {
+func (event Event) MatchFile(file string) bool { //here maybe check if file==event.Path?
 	matched, err := regexp.MatchString(event.Pattern, file)
 	if err != nil {
 		log.Fatal(err)
