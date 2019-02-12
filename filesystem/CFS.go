@@ -1,7 +1,7 @@
 package filesystem
 
 import (
-	"configurablefs/parser"
+	
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
@@ -20,11 +20,11 @@ type CFS struct {
 }
 
 func (me *CFS) Open(name string, flags uint32, context *fuse.Context) (file nodefs.File, code fuse.Status) {
-	events := parser.Parseconfig("config.json")
-	matchedEvent, matched := parser.EventsMatchFile(name, events)
-	if matched {
-		return nodefs.NewDataFile([]byte(matchedEvent.ExecCmd(name))), fuse.OK
-	}
+	//events := parser.Parseconfig("config.json")
+	//matchedEvent, matched := parser.EventsMatchFile(name, events)
+	//if matched {
+		//return nodefs.NewDataFile([]byte(matchedEvent.ExecCmd(name))), fuse.OK
+	//}
 	//base case
 	return me.FileSystem.Open(name, flags, context)
 }

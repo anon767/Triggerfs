@@ -3,39 +3,46 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
-	"os"
+	"strings"
 	"os/exec"
 	"regexp"
+	
 )
 
 type Event struct {
-	Path       string `json:"path"` // maybe drop Pattern?
+	Path       string `json:"path"`
 	Permission string `json:"permission"`
 	Pattern    string `json:"pattern"`
 	Exec       string `json:"exec"`
 }
 
-func Parseconfig(configfile string) (events []Event) {
-	//var events Event
-	jsonFile, err := os.Open(configfile)
-	if err != nil {
-		fmt.Println("open:", err)
-	}
-	defer jsonFile.Close()
-	byteValue, err := ioutil.ReadAll(jsonFile)
+type Events []Event
 
-	if err != nil {
-		fmt.Println("read:", err)
-	}
+type Config map[string]Events
 
-	err = json.Unmarshal(byteValue, &events)
+func Parseconfig(configFile string) (config Config) {
+	
+	byteValue, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		fmt.Println("unmarshall error:", err)
+		fmt.Println("read config:", err)
 	}
+	
+	dec := json.NewDecoder(strings.NewReader(string(byteValue)))
+	for {
+		if err := dec.Decode(&config); err == io.EOF {
+			break
+		} else if err != nil {
+			log.Fatal(err)
+		}
+		
+	}
+	
+	//spew.Dump(config)
 
-	return events
+	return config
 }
 
 func (event Event) ExecCmd(filename string) string {
@@ -58,11 +65,11 @@ func (event Event) MatchFile(file string) bool { //here maybe check if file==eve
 	return false
 }
 
-func EventsMatchFile(file string, events []Event) (Event, bool) {
-	for i := 0; i < len(events); i++ {
-		if events[i].MatchFile(file) {
-			return events[i], true
-		}
-	}
+func EventsMatchFile(file string, config []Config) (Event, bool) {
+	//for i := 0; i < len(config); i++ {
+		//if config[i][file].MatchFile(file) {
+			//return events[i], true
+		//}
+	//}
 	return Event{"", "", "", ""}, false
 }

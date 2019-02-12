@@ -1,0 +1,7 @@
+{
+"/testfile": [{"path":"/testfile", "permission":"0755", "exec":"echo foobar" }],
+"/testdir/": [
+	{"path":"/testdir", "permission":"0755", "pattern":"*.txt", "exec":"echo foobar.txt" },
+	{"path":"/testdir", "permission":"0755", "pattern":"*.pdf", "exec":"echo foobar.pdf" }
+	]
+}
