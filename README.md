@@ -8,14 +8,17 @@ Call and hook into functions by accessing,opening,reading,... certain files.
 create a config.json file, the structure of the contents should look like this:
 
 ```
-[
-  {
-    "permission": "0777",
-    "Pattern": ".*",
-    "Path": "test.txt",
-    "Exec": "/home/tom/go/src/configurablefs/bla.sh"
-  }
-]
+{
+// define a file
+"/testfile": [{"path":"/testfile", "permission":655, "exec":"echo foobar" }],
+
+// define a directory
+// multiple entries are valid for directories only
+"/testdir/": [
+	{"path":"/testdir", "permission":755, "pattern":"*.txt", "exec":"echo foobar.txt" },
+	{"path":"/testdir", "permission":755, "pattern":"*.pdf", "exec":"echo foobar.pdf" }
+	]
+}
 ```
 
 # Usage
@@ -24,15 +27,13 @@ create a config.json file, the structure of the contents should look like this:
 go get
 go build
 mkdir mountpoint
-mkdir test
-./configurablefs test/ mountpoint/ &
-cd mountpoint
-echo test > test
-cat test
+./configurablefs mountpoint/ 
+ls mountpoint
+cat mountpoint/testfile
+
 ```
 
 # Clean up
 ```
-cd ..
-sudo umount mountpoint
+fusermount -u mnt
 ```
