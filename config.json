@@ -1,7 +1,7 @@
 {
-"/testfile": [{"path":"/testfile", "permission":"0755", "exec":"echo foobar" }],
+"/testfile": [{"path":"/testfile", "permission":655, "exec":"echo foobar" }],
 "/testdir/": [
-	{"path":"/testdir", "permission":"0755", "pattern":"*.txt", "exec":"echo foobar.txt" },
-	{"path":"/testdir", "permission":"0755", "pattern":"*.pdf", "exec":"echo foobar.pdf" }
+	{"path":"/testdir", "permission":755, "pattern":"*.txt", "exec":"echo foobar.txt" },
+	{"path":"/testdir", "permission":755, "pattern":"*.pdf", "exec":"echo foobar.pdf" }
 	]
 }

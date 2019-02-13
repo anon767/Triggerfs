@@ -14,14 +14,12 @@ import (
 
 type Event struct {
 	Path       string `json:"path"`
-	Permission string `json:"permission"`
+	Permission uint32 `json:"permission"`
 	Pattern    string `json:"pattern"`
 	Exec       string `json:"exec"`
 }
 
-type Events []Event
-
-type Config map[string]Events
+type Config map[string][]Event
 
 func Parseconfig(configFile string) (config Config) {
 	
@@ -71,5 +69,5 @@ func EventsMatchFile(file string, config []Config) (Event, bool) {
 			//return events[i], true
 		//}
 	//}
-	return Event{"", "", "", ""}, false
+	return Event{"", 0, "", ""}, false
 }
