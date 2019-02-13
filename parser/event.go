@@ -14,7 +14,7 @@ import (
 
 type Event struct {
 	Path       string `json:"path"`
-	Permission uint32 `json:"permission"`
+	Permission string `json:"permission"`
 	Pattern    string `json:"pattern"`
 	Exec       string `json:"exec"`
 }
@@ -69,5 +69,5 @@ func EventsMatchFile(file string, config []Config) (Event, bool) {
 			//return events[i], true
 		//}
 	//}
-	return Event{"", 0, "", ""}, false
+	return Event{"", "", "", ""}, false
 }

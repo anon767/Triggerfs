@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"path/filepath"
+	"fmt"
 	"strings"
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
@@ -9,11 +10,11 @@ import (
 )
 
 /*
-Configurable File System (CFS)
+Trigger File System
 
 The Idea?
 
-act as Loopback FS and eventually call a hooked method depending on maybe config file?
+execute configurable commands on read to generate filecontent on the fly
 */
 
 // shamelessly ripped from https://github.com/hanwen/go-fuse/blob/master/benchmark/statfs.go
@@ -49,6 +50,7 @@ func (fs *triggerFS) Add(name string, permission uint32, a *fuse.Attr) {
 	dir, base := filepath.Split(name)
 	dir = strings.TrimRight(dir, "/")
 	fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: a.Mode})
+	fmt.Printf("v fs.dirs: %v\n", fs.dirs[dir])
 	fs.Add(dir, permission, &fuse.Attr{Mode: fuse.S_IFDIR | permission})
 }
 
@@ -59,15 +61,20 @@ func (fs *triggerFS) AddFile(name string, permission uint32) {
 
 
 func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
+	//dir
 	if d := fs.dirs[name]; d != nil {
-		return &fuse.Attr{Mode: 0755 | fuse.S_IFDIR}, fuse.OK
+		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
 	}
-	e := fs.entries[name]
-	if e == nil {
-		return nil, fuse.ENOENT
+	//file
+	if e := fs.entries[name]; e != nil {
+		return &fuse.Attr{Mode: fuse.S_IFREG | 0644, Size: uint64(len(name))}, fuse.OK
 	}
-
-	return e, fuse.OK
+	//root
+	if name == "" {
+		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
+	}
+	//not found
+	return nil, fuse.ENOENT
 }
 
 func (fs *triggerFS) OpenDir(name string, context *fuse.Context) (stream []fuse.DirEntry, status fuse.Status) {

@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strconv" 
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
 	"github.com/hanwen/go-fuse/fuse"
@@ -24,27 +25,42 @@ func main() {
 	spew.Dump(config)
 	
 	fs := filesystem.NewTriggerFS()
-	
 	for path, event := range config {
-		
+		fmt.Printf("event: %v\n", event)
+		fmt.Println(path + "\n")
 		if path[len(path)-1] == '/' {
 			// directory
 			// multiple entries possible
 			for i := 0; i < len(event); i++ {
-				permission := uint32(0755)
-				if len(string(event[i].Permission)) < 3 { //there must be a  better way
-					permission = uint32(event[i].Permission)
+				//there must be a  better way
+				var permission uint32
+				
+				int_permission, err := strconv.Atoi(event[i].Permission) 
+				if err != nil {
+					permission = uint32(0755)
+				} else {
+					permission = uint32(int_permission)
 				}
+				fmt.Println("adddir: " + string(permission) + "\n")
 				fs.Add(path, permission, &fuse.Attr{Mode: fuse.S_IFDIR | permission})
 			}
 		} else {
 			// file
 			// only one entry per file definition allowed
-			fs.AddFile(path, config[path][0].Permission)
+			int_permission, err := strconv.Atoi(event[0].Permission)
+			var permission uint32
+			if err != nil {
+				permission = uint32(0655)
+			} else {
+				permission = uint32(int_permission)
+			}
+			fmt.Println("addfile: " + string(permission) + "\n")
+			fs.AddFile(path, permission)
 		}
 	}
 	
 	spew.Dump(fs)
+	//fmt.Printf("%v\n",fs)
 	
 	mountpoint := flag.Arg(0)
 	
