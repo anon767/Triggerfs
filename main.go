@@ -34,13 +34,14 @@ func main() {
 			for i := 0; i < len(event); i++ {
 				//there must be a  better way
 				var permission uint32
-				
+				fmt.Println(event[i].Permission) 
 				int_permission, err := strconv.Atoi(event[i].Permission) 
 				if err != nil {
 					permission = uint32(0755)
 				} else {
 					permission = uint32(int_permission)
 				}
+				spew.Dump(permission)
 				fmt.Println("adddir: " + string(permission) + "\n")
 				fs.Add(path, permission, &fuse.Attr{Mode: fuse.S_IFDIR | permission})
 			}
@@ -54,6 +55,7 @@ func main() {
 			} else {
 				permission = uint32(int_permission)
 			}
+			spew.Dump(permission)
 			fmt.Println("addfile: " + string(permission) + "\n")
 			fs.AddFile(path, permission)
 		}

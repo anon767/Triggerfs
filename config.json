@@ -3,5 +3,6 @@
 "/testdir/": [
 	{"path":"/testdir", "permission":"0755", "pattern":"*.txt", "exec":"echo foobar.txt" },
 	{"path":"/testdir", "permission":"0755", "pattern":"*.pdf", "exec":"echo foobar.pdf" }
-	]
+	],
+"/testdir/fileindir": [{"path":"/testdir/fileindir", "permission":"0600", "exec":"echo bar" }]
 }
