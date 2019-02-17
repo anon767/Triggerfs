@@ -1,8 +1,8 @@
 package main
 
 import (
-	"configurablefs/filesystem"
-	"configurablefs/parser"
+	"triggerfs/filesystem"
+	"triggerfs/parser"
 	"flag"
 	"fmt"
 	"log"
@@ -17,7 +17,7 @@ func main() {
 
 	flag.Parse()
 	if len(flag.Args()) < 1 {
-		log.Fatal("Usage:\n  configurablefs MOUNTPOINT")
+		log.Fatal("Usage:\n  triggerfs MOUNTPOINT")
 	}
 	
 	fmt.Println("reading config:\n")
@@ -43,7 +43,7 @@ func main() {
 				}
 				spew.Dump(permission)
 				fmt.Println("adddir: " + string(permission) + "\n")
-				fs.Add(path, permission, &fuse.Attr{Mode: fuse.S_IFDIR | permission})
+				fs.Add(path, permission, event[i].Pattern, event[i].Exec, &fuse.Attr{Mode: fuse.S_IFDIR | permission})
 			}
 		} else {
 			// file
@@ -57,7 +57,7 @@ func main() {
 			}
 			spew.Dump(permission)
 			fmt.Println("addfile: " + string(permission) + "\n")
-			fs.AddFile(path, permission)
+			fs.AddFile(path, permission, event[0].Pattern, event[0].Exec)
 		}
 	}
 	
