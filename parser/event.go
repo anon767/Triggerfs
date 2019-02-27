@@ -9,17 +9,22 @@ import (
 	"strings"
 	"os/exec"
 	"regexp"
-	
+	"strconv" 
+	"github.com/hanwen/go-fuse/fuse"
 )
 
-type Event struct {
+type Entry struct {
 	Path       string `json:"path"`
 	Permission string `json:"permission"`
 	Pattern    string `json:"pattern"`
 	Exec       string `json:"exec"`
+	Mtime      int `json:"mtime"`
+	Ctime      int `json:"ctime"`
+	Atime      int `json:"atime"`
+	Size       int `json:"size"`
 }
 
-type Config map[string][]Event
+type Config map[string][]Entry
 
 func Parseconfig(configFile string) (config Config) {
 	
@@ -43,17 +48,17 @@ func Parseconfig(configFile string) (config Config) {
 	return config
 }
 
-func (event Event) ExecCmd(filename string) string {
+func (entry Entry) ExecCmd(filename string) string {
 	// ignore filename, it can be a parameter or something in the future
-	out, err := exec.Command("sh", "-c", event.Exec).Output()
+	out, err := exec.Command("sh", "-c", entry.Exec).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
 	return string(out)
 }
 
-func (event Event) MatchFile(file string) bool { //here maybe check if file==event.Path?
-	matched, err := regexp.MatchString(event.Pattern, file)
+func (entry Entry) MatchFile(file string) bool { //here maybe check if file==entry.Path?
+	matched, err := regexp.MatchString(entry.Pattern, file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -63,11 +68,46 @@ func (event Event) MatchFile(file string) bool { //here maybe check if file==eve
 	return false
 }
 
-func EventsMatchFile(file string, config []Config) (Event, bool) {
+func EntrysMatchFile(file string, config []Config) (Entry, bool) {
 	//for i := 0; i < len(config); i++ {
 		//if config[i][file].MatchFile(file) {
-			//return events[i], true
+			//return entrys[i], true
 		//}
 	//}
-	return Event{"", "", "", ""}, false
+	return Entry{"", "", "", "", 0, 0, 0, 0}, false
+}
+
+
+func ConfigToAttr(config Entry, dir bool) (*fuse.Attr, uint32) {
+	attr := &fuse.Attr{}
+	permission := uint32(0644)
+	mode := uint32(fuse.S_IFREG)
+	
+	if dir {
+		permission = 0755
+		mode = fuse.S_IFDIR
+	}
+	
+	if config.Permission != "" {
+		//int_permission, err := strconv.Atoi(config.Permission)
+		fmt.Println("permissionstring: " + config.Permission)
+		int_permission, err := strconv.ParseUint(config.Permission, 8, 32)
+		if err == nil {
+			fmt.Printf("\nint permission: %v\n", int_permission)
+			permission = uint32(int_permission)
+		}
+		
+	}
+	fmt.Printf("\npermission: %v\n", permission)
+	tmp := int(mode) | int(permission)
+	fmt.Printf("\nmode | permission: %v\n", tmp)
+	attr.Mode = mode | permission
+
+	attr.Size  = uint64(config.Size)
+	attr.Mtime = uint64(config.Mtime)
+	attr.Atime = uint64(config.Atime)
+	attr.Ctime = uint64(config.Ctime)
+
+	
+	return attr, permission
 }

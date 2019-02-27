@@ -1,5 +1,5 @@
 {
-"/testfile": [{"path":"/testfile", "permission":"0655", "exec":"echo foobar" }],
+"/testfile": [{"path":"/testfile", "permission":"0777", "exec":"echo foobar", "size":555, "ctime":1551227641, "mtime":1551227641 }],
 "/testdir/": [
 	{"path":"/testdir", "permission":"0755", "pattern":"*.txt", "exec":"echo foobar.txt" },
 	{"path":"/testdir", "permission":"0755", "pattern":"*.pdf", "exec":"echo foobar.pdf" }

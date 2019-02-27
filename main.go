@@ -6,10 +6,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"strconv" 
+	
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
-	"github.com/hanwen/go-fuse/fuse"
+	
 	"github.com/davecgh/go-spew/spew"
 )
 
@@ -33,31 +33,16 @@ func main() {
 			// multiple entries possible
 			for i := 0; i < len(event); i++ {
 				//there must be a  better way
-				var permission uint32
-				fmt.Println(event[i].Permission) 
-				int_permission, err := strconv.Atoi(event[i].Permission) 
-				if err != nil {
-					permission = uint32(0755)
-				} else {
-					permission = uint32(int_permission)
-				}
-				spew.Dump(permission)
-				fmt.Println("adddir: " + string(permission) + "\n")
-				fs.Add(path, permission, event[i].Pattern, event[i].Exec, &fuse.Attr{Mode: fuse.S_IFDIR | permission})
+				attr, permission := parser.ConfigToAttr(event[i], true)
+				fmt.Printf("adddir: %+v\n", attr)
+				fs.Add(path, uint32(permission), event[i].Pattern, event[i].Exec, attr)
 			}
 		} else {
 			// file
 			// only one entry per file definition allowed
-			int_permission, err := strconv.Atoi(event[0].Permission)
-			var permission uint32
-			if err != nil {
-				permission = uint32(0655)
-			} else {
-				permission = uint32(int_permission)
-			}
-			spew.Dump(permission)
-			fmt.Println("addfile: " + string(permission) + "\n")
-			fs.AddFile(path, permission, event[0].Pattern, event[0].Exec)
+			attr, permission := parser.ConfigToAttr(event[0], false)
+			fmt.Printf("addfile: %+v\n", attr)
+			fs.AddFile(path, uint32(permission), event[0].Pattern, event[0].Exec, attr)
 		}
 	}
 	
