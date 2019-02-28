@@ -1,7 +1,10 @@
 # TriggerFS
 
-An overlay for your FS using Go and Fuse native binding.
+A virtual FS using Go and Fuse native binding.
 Execute configurable commands on read calls of files or patterns of filenames.
+
+The Idea is to have a virtual readonly filesystem populated by files defined in a config and generate the contents on read accesses by running configurable commands and returning their output as content.
+
 
 # Config
 
@@ -19,7 +22,7 @@ create a config.json file, the structure of the contents should look like this:
 // i.e. "foobar" as content of all *.txt files that are accessed
 "/testdir/": [
 	{"permission":"0755", "ctime":1551220000, "mtime":1551220000},
-	{"permission":755, "pattern":".txt", "exec":"echo foobar", "size":500, "ctime":1551220000, "mtime":1551220000  }
+	{"permission":"0755", "pattern":".txt", "exec":"echo foobar", "size":500, "ctime":1551220000, "mtime":1551220000  }
 	]
 }
 ```
