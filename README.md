@@ -23,6 +23,9 @@ create a config.json file, the structure of the contents should look like this:
 	]
 }
 ```
+You can use %FILE% or %PATH% in your exec command wich will get replaced with the filename or the full path.
+
+
 
 # Usage
 

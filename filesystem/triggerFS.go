@@ -85,8 +85,6 @@ func (fs *triggerFS) Add(name string, permission uint32,pattern string, exec str
 	dir, base := filepath.Split(name)
 	dir = strings.TrimRight(dir, "/")
 	fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: attr.Mode})
-	//fs.conf[dir] = append(fs.conf[dir], Conf{Pattern: pattern, Exec: exec})
-	fmt.Printf("v fs.dirs: %v\n", fs.dirs[dir])
 	fs.Add(dir, 0, "", "", &fuse.Attr{Mode: fuse.S_IFDIR | permission})
 }
 
@@ -101,7 +99,6 @@ func (fs *triggerFS) Deletable() bool {
 }
 
 func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
-	fmt.Println("GetAttr called")
 	name = "/" + name
 	if name == "/" {
 		fmt.Printf("getattr name empty %s: %v\n", name, context)
@@ -130,7 +127,6 @@ func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 }
 
 func (fs *triggerFS) OpenDir(name string, context *fuse.Context) (stream []fuse.DirEntry, status fuse.Status) {
-	fmt.Println("OpenDir called")
 	name = "/" + name
 	entries := fs.dirs[name]
 	if entries == nil {
@@ -142,7 +138,6 @@ func (fs *triggerFS) OpenDir(name string, context *fuse.Context) (stream []fuse.
 
 func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (file nodefs.File, code fuse.Status) {
 	name = "/" + name
-	fmt.Println("Open called")
 	if flags&fuse.O_ANYWRITE != 0 {
 		return nil, fuse.EPERM
 	}

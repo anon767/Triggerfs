@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
-	"regexp"
 	"strconv" 
 	"github.com/hanwen/go-fuse/fuse"
 )
@@ -47,25 +46,25 @@ func Parseconfig(configFile string) (config Config) {
 	return config
 }
 
-func (entry Entry) MatchFile(file string) bool { //here maybe check if file==entry.Path?
-	matched, err := regexp.MatchString(entry.Pattern, file)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if matched {
-		return true
-	}
-	return false
-}
-
-func EntrysMatchFile(file string, config []Config) (Entry, bool) {
-	//for i := 0; i < len(config); i++ {
-		//if config[i][file].MatchFile(file) {
-			//return entrys[i], true
-		//}
+//func (entry Entry) MatchFile(file string) bool { //here maybe check if file==entry.Path?
+	//matched, err := regexp.MatchString(entry.Pattern, file)
+	//if err != nil {
+		//log.Fatal(err)
 	//}
-	return Entry{"", "", "", 0, 0, 0, 0}, false
-}
+	//if matched {
+		//return true
+	//}
+	//return false
+//}
+
+//func EntrysMatchFile(file string, config []Config) (Entry, bool) {
+	////for i := 0; i < len(config); i++ {
+		////if config[i][file].MatchFile(file) {
+			////return entrys[i], true
+		////}
+	////}
+	//return Entry{"", "", "", 0, 0, 0, 0}, false
+//}
 
 
 func ConfigToAttr(config Entry, dir bool) (*fuse.Attr, uint32) {
@@ -80,17 +79,12 @@ func ConfigToAttr(config Entry, dir bool) (*fuse.Attr, uint32) {
 	
 	if config.Permission != "" {
 		//int_permission, err := strconv.Atoi(config.Permission)
-		fmt.Println("permissionstring: " + config.Permission)
 		int_permission, err := strconv.ParseUint(config.Permission, 8, 32)
 		if err == nil {
-			fmt.Printf("\nint permission: %v\n", int_permission)
 			permission = uint32(int_permission)
 		}
 		
 	}
-	fmt.Printf("\npermission: %v\n", permission)
-	tmp := int(mode) | int(permission)
-	fmt.Printf("\nmode | permission: %v\n", tmp)
 	attr.Mode = mode | permission
 
 	attr.Size  = uint64(config.Size)
