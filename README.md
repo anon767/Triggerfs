@@ -6,7 +6,6 @@ Call and hook into functions by accessing,opening,reading,... certain files.
 # Config
 
 create a config.json file, the structure of the contents should look like this:
-
 ```
 {
 // define a file
@@ -38,5 +37,5 @@ cat mountpoint/testfile
 
 # Clean up
 ```
-fusermount -u mnt
+fusermount -u mountpoint
 ```
