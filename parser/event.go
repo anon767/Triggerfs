@@ -7,14 +7,13 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
-	"os/exec"
 	"regexp"
 	"strconv" 
 	"github.com/hanwen/go-fuse/fuse"
 )
 
 type Entry struct {
-	Path       string `json:"path"`
+	//Path       string `json:"path"`
 	Permission string `json:"permission"`
 	Pattern    string `json:"pattern"`
 	Exec       string `json:"exec"`
@@ -48,15 +47,6 @@ func Parseconfig(configFile string) (config Config) {
 	return config
 }
 
-func (entry Entry) ExecCmd(filename string) string {
-	// ignore filename, it can be a parameter or something in the future
-	out, err := exec.Command("sh", "-c", entry.Exec).Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(out)
-}
-
 func (entry Entry) MatchFile(file string) bool { //here maybe check if file==entry.Path?
 	matched, err := regexp.MatchString(entry.Pattern, file)
 	if err != nil {
@@ -74,7 +64,7 @@ func EntrysMatchFile(file string, config []Config) (Entry, bool) {
 			//return entrys[i], true
 		//}
 	//}
-	return Entry{"", "", "", "", 0, 0, 0, 0}, false
+	return Entry{"", "", "", 0, 0, 0, 0}, false
 }
 
 

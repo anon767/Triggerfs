@@ -1,8 +1,8 @@
 {
 "/testfile": [{"path":"/testfile", "permission":"0777", "exec":"echo foobar", "size":555, "ctime":1551227641, "mtime":1551227641 }],
 "/testdir/": [
-	{"path":"/testdir", "permission":"0755", "pattern":"*.txt", "exec":"echo foobar.txt" },
-	{"path":"/testdir", "permission":"0755", "pattern":"*.pdf", "exec":"echo foobar.pdf" }
-	],
-"/testdir/fileindir": [{"path":"/testdir/fileindir", "permission":"0600", "exec":"echo bar" }]
+	{"permission":"0755", "ctime":1551227641, "mtime":1551227641},
+	{"path":"/testdir", "permission":"0644", "pattern":".txt", "exec":"echo foobar.txt", "size":50, "ctime":1551227641, "mtime":1551227641 },
+	{"path":"/testdir", "permission":"0644", "pattern":".pdf", "exec":"echo foobar.pdf", "size":55, "ctime":1551227641, "mtime":1551227641 }
+	]
 }

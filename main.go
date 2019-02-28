@@ -30,10 +30,11 @@ func main() {
 		fmt.Println(path + "\n")
 		if path[len(path)-1] == '/' {
 			// directory
+			attr, permission := parser.ConfigToAttr(event[0], true)
+			fs.Add(path, uint32(permission), event[0].Pattern, event[0].Exec, attr)
 			// multiple entries possible
-			for i := 0; i < len(event); i++ {
-				//there must be a  better way
-				attr, permission := parser.ConfigToAttr(event[i], true)
+			for i := 1; i < len(event); i++ {
+				attr, permission := parser.ConfigToAttr(event[i], false)
 				fmt.Printf("adddir: %+v\n", attr)
 				fs.Add(path, uint32(permission), event[i].Pattern, event[i].Exec, attr)
 			}
