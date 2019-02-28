@@ -10,13 +10,16 @@ create a config.json file, the structure of the contents should look like this:
 ```
 {
 // define a file
-"/testfile": [{"path":"/testfile", "permission":655, "exec":"echo foobar" }],
+"/testfile": [{"permission":655, "exec":"echo foobar", "size":555, "ctime":1551220000, "mtime":1551220000 }],
 
 // define a directory
+// first entry defines directory
+// all other entries will be treated as file definitions
 // multiple entries are valid for directories only
 "/testdir/": [
-	{"path":"/testdir", "permission":755, "pattern":"*.txt", "exec":"echo foobar.txt" },
-	{"path":"/testdir", "permission":755, "pattern":"*.pdf", "exec":"echo foobar.pdf" }
+	{"permission":"0755", "ctime":1551220000, "mtime":1551220000},
+	{"permission":755, "pattern":"*.txt", "exec":"echo foobar.txt", "size":500, "ctime":1551220000, "mtime":1551220000  },
+	{"permission":755, "pattern":"*.pdf", "exec":"echo foobar.pdf", "size":500, "ctime":1551220000, "mtime":1551220000  }
 	]
 }
 ```
@@ -27,7 +30,7 @@ create a config.json file, the structure of the contents should look like this:
 go get
 go build
 mkdir mountpoint
-./configurablefs mountpoint/ 
+./triggerfs mountpoint/ 
 ls mountpoint
 cat mountpoint/testfile
 
