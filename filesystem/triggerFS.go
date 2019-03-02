@@ -21,8 +21,6 @@ The Idea?
 execute configurable commands on read to generate filecontent on the fly
 */
 
-// shamelessly ripped from https://github.com/hanwen/go-fuse/blob/master/benchmark/statfs.go
-
 type Conf struct {
 	Pattern    string
 	Exec       string
@@ -47,7 +45,14 @@ func NewTriggerFS() *triggerFS {
 }
 
 
+func PrepareCmd(command string, path string, file string) string {
+	exec := strings.Replace(command, "%FILE%", file, -1)
+	exec = strings.Replace(exec, "%PATH%", path, -1)
+	return exec
+}
+
 func ExecCmd(command string) string {
+	fmt.Printf("Executing: %s\n", command)
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		log.Fatal(err)
@@ -70,6 +75,7 @@ func MatchFile(file string, pattern string) bool {
 
 func (fs *triggerFS) Add(name string, permission uint32,pattern string, exec string, attr *fuse.Attr) {
 	//name = strings.TrimRight(name, "/")
+	//name = "/" + name
 	if name == "" {
 		name = "/"
 	}
@@ -81,7 +87,7 @@ func (fs *triggerFS) Add(name string, permission uint32,pattern string, exec str
 
 	fs.entries[name] = attr
 	
-	if name == "/" || name == "" {
+	if name == "/" {
 		return
 	}
 
@@ -92,9 +98,9 @@ func (fs *triggerFS) Add(name string, permission uint32,pattern string, exec str
 }
 
 
-func (fs *triggerFS) AddFile(name string, permission uint32, pattern string, exec string, attr *fuse.Attr) {
-	fs.Add(name, permission, pattern, exec, attr)
-}
+//func (fs *triggerFS) AddFile(name string, permission uint32, pattern string, exec string, attr *fuse.Attr) {
+	//fs.Add(name, permission, pattern, exec, attr)
+//}
 
 
 func (fs *triggerFS) Deletable() bool {
@@ -104,12 +110,11 @@ func (fs *triggerFS) Deletable() bool {
 func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 	name = "/" + name
 	if name == "/" {
-		fmt.Printf("getattr name empty %s: %v\n", name, context)
+		//fmt.Printf("getattr name empty %s: %v\n", name, context)
 		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
 	}
 	if d := fs.entries[name]; d != nil {
-		fmt.Printf("getattr found %s: %v\n", name, context)
-		//return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
+		//fmt.Printf("getattr found %s: %v\n", name, context)
 		return fs.entries[name], fuse.OK
 	}
 	
@@ -118,14 +123,14 @@ func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 	if cfg != nil {
 		for i := 1; i < len(cfg); i++ {
 			if MatchFile(filename, cfg[i].Pattern) {
-				fmt.Printf("getattr found dir rule %s: %v\n", name, cfg[i].Attr)
+				//fmt.Printf("getattr found dir rule %s: %v\n", name, cfg[i].Attr)
 				return cfg[i].Attr, fuse.OK
 				
 			}
 		}
 	}
 	//not found
-	fmt.Printf("getattr not found %s: %v\n", name, context)
+	//fmt.Printf("getattr not found %s: %v\n", name, context)
 	return nil, fuse.ENOENT
 }
 
@@ -150,9 +155,10 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 	//match file
 	cfg := fs.conf[name]
 	if cfg != nil {
-		exec := strings.Replace(cfg[0].Exec, "%FILE%", filename, -1)
-		exec = strings.Replace(exec, "%PATH%", name, -1)
-		fmt.Printf("Open file: %s -- %s\n",name, exec)
+		exec := PrepareCmd(cfg[0].Exec, name, filename)
+		//exec := strings.Replace(cfg[0].Exec, "%FILE%", filename, -1)
+		//exec = strings.Replace(exec, "%PATH%", name, -1)
+		fmt.Printf("Open file: %s\n",name)
 		content := ExecCmd(exec)
 		
 		//fmt.Printf("Open file: %s\n",name)
@@ -165,9 +171,10 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 	if cfg != nil {
 		for i := 1; i < len(cfg); i++ {
 			if MatchFile(filename, cfg[i].Pattern) {
-				exec := strings.Replace(cfg[i].Exec, "%FILE%", filename, -1)
-				exec = strings.Replace(exec, "%PATH%", name, -1)
-				fmt.Printf("Open match dir: %s -- %s\n",name, exec)
+				exec := PrepareCmd(cfg[i].Exec, name, filename)
+				//exec := strings.Replace(cfg[i].Exec, "%FILE%", filename, -1)
+				//exec = strings.Replace(exec, "%PATH%", name, -1)
+				fmt.Printf("Open match dir: %s\n",name)
 				content := ExecCmd(exec)
 				return nodefs.NewDataFile([]byte(content)), fuse.OK
 			}
