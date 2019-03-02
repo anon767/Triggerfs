@@ -70,6 +70,9 @@ func MatchFile(file string, pattern string) bool {
 
 func (fs *triggerFS) Add(name string, permission uint32,pattern string, exec string, attr *fuse.Attr) {
 	//name = strings.TrimRight(name, "/")
+	if name == "" {
+		name = "/"
+	}
 	fs.conf[name] = append(fs.conf[name], Conf{Pattern: pattern, Exec: exec, Attr: attr})
 	_, ok := fs.entries[name]
 	if ok {
@@ -127,7 +130,7 @@ func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 }
 
 func (fs *triggerFS) OpenDir(name string, context *fuse.Context) (stream []fuse.DirEntry, status fuse.Status) {
-	name = "/" + name
+	//name = "/" + name
 	entries := fs.dirs[name]
 	if entries == nil {
 		return nil, fuse.ENOENT

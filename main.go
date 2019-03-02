@@ -9,20 +9,26 @@ import (
 	
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
-	
-	"github.com/davecgh/go-spew/spew"
+
 )
 
 func main() {
-
+	
+	//configfile := "config.json"
+	var configfile string
+	//fmt.Printf("%v\n", flag.Args())
+	flag.StringVar(&configfile,"c", "config.json", "Configfile")
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		log.Fatal("Usage:\n  triggerfs MOUNTPOINT")
 	}
+	mountpoint := flag.Arg(0)
 	
-	fmt.Println("reading config:\n")
-	config := parser.Parseconfig("config.json")
-	spew.Dump(config)
+	
+	
+	fmt.Printf("reading config:%s\n", configfile)
+	config := parser.Parseconfig(configfile)
+	
 	
 	fs := filesystem.NewTriggerFS()
 	for path, event := range config {
@@ -47,10 +53,7 @@ func main() {
 		}
 	}
 	
-	spew.Dump(fs)
 	//fmt.Printf("%v\n",fs)
-	
-	mountpoint := flag.Arg(0)
 	
 	nfs := pathfs.NewPathNodeFs(fs, nil)
 	server, _, err := nodefs.MountRoot(mountpoint, nfs.Root(), nil)
