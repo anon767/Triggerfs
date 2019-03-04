@@ -40,34 +40,12 @@ func Parseconfig(configFile string) (config Config) {
 		}
 		
 	}
-	
-	//spew.Dump(config)
 
 	return config
 }
 
-//func (entry Entry) MatchFile(file string) bool { //here maybe check if file==entry.Path?
-	//matched, err := regexp.MatchString(entry.Pattern, file)
-	//if err != nil {
-		//log.Fatal(err)
-	//}
-	//if matched {
-		//return true
-	//}
-	//return false
-//}
 
-//func EntrysMatchFile(file string, config []Config) (Entry, bool) {
-	////for i := 0; i < len(config); i++ {
-		////if config[i][file].MatchFile(file) {
-			////return entrys[i], true
-		////}
-	////}
-	//return Entry{"", "", "", 0, 0, 0, 0}, false
-//}
-
-
-func ConfigToAttr(config Entry, dir bool) (*fuse.Attr, uint32) {
+func ConfigToAttr(config Entry, dir bool) (*fuse.Attr) {
 	attr := &fuse.Attr{}
 	permission := uint32(0644)
 	mode := uint32(fuse.S_IFREG)
@@ -78,7 +56,6 @@ func ConfigToAttr(config Entry, dir bool) (*fuse.Attr, uint32) {
 	}
 	
 	if config.Permission != "" {
-		//int_permission, err := strconv.Atoi(config.Permission)
 		int_permission, err := strconv.ParseUint(config.Permission, 8, 32)
 		if err == nil {
 			permission = uint32(int_permission)
@@ -93,5 +70,5 @@ func ConfigToAttr(config Entry, dir bool) (*fuse.Attr, uint32) {
 	attr.Ctime = uint64(config.Ctime)
 
 	
-	return attr, permission
+	return attr
 }

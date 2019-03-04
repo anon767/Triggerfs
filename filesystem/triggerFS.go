@@ -32,6 +32,7 @@ type triggerFS struct {
 	entries map[string]*fuse.Attr
 	dirs map[string][]fuse.DirEntry
 	conf map[string][]Conf
+	nextinode int
 }
 
 
@@ -41,6 +42,7 @@ func NewTriggerFS() *triggerFS {
 		entries:    make(map[string]*fuse.Attr),
 		dirs:       make(map[string][]fuse.DirEntry),
 		conf:       make(map[string][]Conf),
+		nextinode:	0,
 	}
 }
 
@@ -50,6 +52,7 @@ func PrepareCmd(command string, path string, file string) string {
 	exec = strings.Replace(exec, "%PATH%", path, -1)
 	return exec
 }
+
 
 func ExecCmd(command string) string {
 	fmt.Printf("Executing: %s\n", command)
@@ -73,52 +76,64 @@ func MatchFile(file string, pattern string) bool {
 }
 
 
-func (fs *triggerFS) Add(name string, permission uint32,pattern string, exec string, attr *fuse.Attr) {
+func (fs *triggerFS) GetNextInode() int {
+	fs.nextinode++
+	return fs.nextinode
+}
+	
+
+
+func (fs *triggerFS) Add(name string, pattern string, exec string, attr *fuse.Attr) {
 	//name = strings.TrimRight(name, "/")
 	//name = "/" + name
 	if name == "" {
 		name = "/"
 	}
 	fs.conf[name] = append(fs.conf[name], Conf{Pattern: pattern, Exec: exec, Attr: attr})
-	_, ok := fs.entries[name]
-	if ok {
+	
+	if fs.entries[name] != nil {
 		return
 	}
+	//attr.Inode = fs.GetNextInode()
 
 	fs.entries[name] = attr
+	fmt.Printf("ADD: %s\n", name)
 	
+	
+	dir, base := filepath.Split(name)
+	if dir != "/" {
+		dir = strings.TrimRight(dir, "/")
+	}
+	fmt.Printf("NEXTADD: %s\n", dir)
+	fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: attr.Mode})
 	if name == "/" {
 		return
 	}
-
-	dir, base := filepath.Split(name)
-	dir = strings.TrimRight(dir, "/")
-	fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: attr.Mode})
-	fs.Add(dir, 0, "", "", &fuse.Attr{Mode: fuse.S_IFDIR | permission})
+	
+	fs.Add(dir, "", "", &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: 4096})
 }
-
-
-//func (fs *triggerFS) AddFile(name string, permission uint32, pattern string, exec string, attr *fuse.Attr) {
-	//fs.Add(name, permission, pattern, exec, attr)
-//}
 
 
 func (fs *triggerFS) Deletable() bool {
 	return false
 }
 
+
 func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 	name = "/" + name
-	if name == "/" {
-		//fmt.Printf("getattr name empty %s: %v\n", name, context)
-		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
-	}
+	//if name == "/" {
+		////fmt.Printf("getattr name empty %s: %v\n", name, context)
+		//return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
+	//}
 	if d := fs.entries[name]; d != nil {
 		//fmt.Printf("getattr found %s: %v\n", name, context)
 		return fs.entries[name], fuse.OK
 	}
 	
 	dirname, filename := filepath.Split(string(name))
+	if dirname != "/" {
+		dirname = strings.TrimRight(dirname, "/")
+	}
 	cfg := fs.conf[dirname]
 	if cfg != nil {
 		for i := 1; i < len(cfg); i++ {
@@ -135,45 +150,45 @@ func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 }
 
 func (fs *triggerFS) OpenDir(name string, context *fuse.Context) (stream []fuse.DirEntry, status fuse.Status) {
-	//name = "/" + name
+	//name = name + "/" 
+	name = "/" + name
+	
 	entries := fs.dirs[name]
-	if entries == nil {
-		return nil, fuse.ENOENT
-	}
+	fmt.Printf("Opendir: %s: %v\n", name, entries)
+	//if entries == nil {
+		//return nil, fuse.ENOENT
+	//}
 	return entries, fuse.OK
 }
 
 
 func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (file nodefs.File, code fuse.Status) {
 	name = "/" + name
+	fmt.Printf("open not found: %s\n", name)
 	if flags&fuse.O_ANYWRITE != 0 {
 		return nil, fuse.EPERM
 	}
 	
 	dirname, filename := filepath.Split(string(name))
-	
+	if dirname != "/" {
+		dirname = strings.TrimRight(dirname, "/")
+	}
 	//match file
 	cfg := fs.conf[name]
 	if cfg != nil {
 		exec := PrepareCmd(cfg[0].Exec, name, filename)
-		//exec := strings.Replace(cfg[0].Exec, "%FILE%", filename, -1)
-		//exec = strings.Replace(exec, "%PATH%", name, -1)
 		fmt.Printf("Open file: %s\n",name)
 		content := ExecCmd(exec)
-		
-		//fmt.Printf("Open file: %s\n",name)
-		//content := ExecCmd(cfg[0].Exec)
 		return nodefs.NewDataFile([]byte(content)), fuse.OK
 	}
 	
 	//match dir
 	cfg = fs.conf[dirname]
 	if cfg != nil {
+		fmt.Println("matched dir")
 		for i := 1; i < len(cfg); i++ {
 			if MatchFile(filename, cfg[i].Pattern) {
 				exec := PrepareCmd(cfg[i].Exec, name, filename)
-				//exec := strings.Replace(cfg[i].Exec, "%FILE%", filename, -1)
-				//exec = strings.Replace(exec, "%PATH%", name, -1)
 				fmt.Printf("Open match dir: %s\n",name)
 				content := ExecCmd(exec)
 				return nodefs.NewDataFile([]byte(content)), fuse.OK
@@ -181,6 +196,7 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 		}
 	}
 	//not found
+	fmt.Printf("open not found: %s\n", name)
 	return nil, fuse.ENOENT
 }
 
