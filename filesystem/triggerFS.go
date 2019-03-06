@@ -76,11 +76,17 @@ func MatchFile(file string, pattern string) bool {
 }
 
 
+func UpdateSize(attr *fuse.Attr, size int) *fuse.Attr {
+	attr.Size = uint64(size)
+	return attr
+}
+
+
 func (fs *triggerFS) GetNextInode() int {
 	fs.nextinode++
 	return fs.nextinode
 }
-	
+
 
 
 func (fs *triggerFS) Add(name string, pattern string, exec string, attr *fuse.Attr) {
@@ -104,8 +110,9 @@ func (fs *triggerFS) Add(name string, pattern string, exec string, attr *fuse.At
 	if dir != "/" {
 		dir = strings.TrimRight(dir, "/")
 	}
-	fmt.Printf("NEXTADD: %s\n", dir)
-	fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: attr.Mode})
+	if base != "" {
+		fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: attr.Mode})
+	}
 	if name == "/" {
 		return
 	}
@@ -154,7 +161,7 @@ func (fs *triggerFS) OpenDir(name string, context *fuse.Context) (stream []fuse.
 	name = "/" + name
 	
 	entries := fs.dirs[name]
-	fmt.Printf("Opendir: %s: %v\n", name, entries)
+	//fmt.Printf("Opendir: %s: %v\n", name, entries)
 	//if entries == nil {
 		//return nil, fuse.ENOENT
 	//}
@@ -178,7 +185,9 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 	if cfg != nil {
 		exec := PrepareCmd(cfg[0].Exec, name, filename)
 		fmt.Printf("Open file: %s\n",name)
+		
 		content := ExecCmd(exec)
+		//fs.entries[name] = UpdateSize(fs.entries[name], len(content))
 		return nodefs.NewDataFile([]byte(content)), fuse.OK
 	}
 	
@@ -190,7 +199,18 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 			if MatchFile(filename, cfg[i].Pattern) {
 				exec := PrepareCmd(cfg[i].Exec, name, filename)
 				fmt.Printf("Open match dir: %s\n",name)
+				
 				content := ExecCmd(exec)
+				
+				// resetting the size of matched files. maybe we should do a fs.Add() here to index the called file
+				//fmt.Printf("Old Size of %s: %i\n",name,int(cfg[i].Attr.Size))
+				//attr := cfg[i].Attr
+				//attr.Size = uint64(len(content))
+				////fs.conf[dirname][i].Attr = attr
+				//fs.conf[dirname][i].Attr = UpdateSize(fs.conf[dirname][i].Attr, len(content))
+				//fs.entries[name] = UpdateSize(fs.conf[dirname][i].Attr, len(content))
+				//fmt.Printf("New Size of %s: %i\n",name,int(cfg[i].Attr.Size))
+				
 				return nodefs.NewDataFile([]byte(content)), fuse.OK
 			}
 		}
