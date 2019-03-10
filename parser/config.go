@@ -1,47 +1,47 @@
 package parser
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"log"
-	"strings"
 	"strconv" 
+	"github.com/lytics/confl"
 	"github.com/hanwen/go-fuse/fuse"
 )
 
 type Entry struct {
-	//Path       string `json:"path"`
-	Permission string `json:"permission"`
-	Pattern    string `json:"pattern"`
-	Exec       string `json:"exec"`
-	Mtime      int `json:"mtime"`
-	Ctime      int `json:"ctime"`
-	Atime      int `json:"atime"`
-	Size       int `json:"size"`
+	Permission string  `confl:"permission"`
+	Exec       string `confl:"exec"`
+	Mtime      int  `confl:"mtime"`
+	Ctime      int  `confl:"ctime"`
+	Atime      int  `confl:"atime"`
+	Size       int  `confl:"size"`
 }
 
-type Config map[string][]Entry
+
+type Config struct {
+	// triggerFS config
+	Title string `confl:"title"`
+	Caching bool `confl:"size_cache"`
+	//entries
+	File map[string]Entry
+	Dir map[string]Entry
+	Pattern map[string]Entry
+	
+}
+
+
+//type Config map[string][]Entry
 
 func Parseconfig(configFile string) (config Config) {
 	
-	byteValue, err := ioutil.ReadFile(configFile)
+	var cfg Config
+	conf, err := confl.DecodeFile(configFile, &cfg)
 	if err != nil {
-		fmt.Println("read config:", err)
-	}
-	
-	dec := json.NewDecoder(strings.NewReader(string(byteValue)))
-	for {
-		if err := dec.Decode(&config); err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatal(err)
-		}
-		
+	  fmt.Println("error unmarshalling")
+	  fmt.Println(conf)
+	  fmt.Println(err)
 	}
 
-	return config
+	return cfg
 }
 
 

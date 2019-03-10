@@ -27,11 +27,19 @@ type Conf struct {
 	Attr       *fuse.Attr
 }
 
+
+type Cache struct {
+	// content should be cached in sqlite in the future
+	//Content		string
+	Attr		*fuse.Attr
+}
+
 type triggerFS struct {
 	pathfs.FileSystem
 	entries map[string]*fuse.Attr
 	dirs map[string][]fuse.DirEntry
 	conf map[string][]Conf
+	cache map[string]Cache
 	nextinode int
 }
 
@@ -42,6 +50,7 @@ func NewTriggerFS() *triggerFS {
 		entries:    make(map[string]*fuse.Attr),
 		dirs:       make(map[string][]fuse.DirEntry),
 		conf:       make(map[string][]Conf),
+		cache:       make(map[string]Cache),
 		nextinode:	0,
 	}
 }
@@ -55,7 +64,7 @@ func PrepareCmd(command string, path string, file string) string {
 
 
 func ExecCmd(command string) string {
-	fmt.Printf("Executing: %s\n", command)
+	//fmt.Printf("Executing: %s\n", command)
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		log.Fatal(err)
@@ -95,6 +104,7 @@ func (fs *triggerFS) Add(name string, pattern string, exec string, attr *fuse.At
 	if name == "" {
 		name = "/"
 	}
+	fmt.Println("ADD pattern: ",pattern)
 	fs.conf[name] = append(fs.conf[name], Conf{Pattern: pattern, Exec: exec, Attr: attr})
 	
 	if fs.entries[name] != nil {
@@ -132,8 +142,15 @@ func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 		////fmt.Printf("getattr name empty %s: %v\n", name, context)
 		//return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
 	//}
+	
+	// return cached attributes if it exist
+	if c, ok := fs.cache[name]; ok {
+		//fmt.Printf("getattr cache %s: %v\n", name, c.Attr)
+		return c.Attr, fuse.OK
+	}
+	
 	if d := fs.entries[name]; d != nil {
-		//fmt.Printf("getattr found %s: %v\n", name, context)
+		//fmt.Printf("getattr found %s: %s\n", name, fs.conf[name][0].Exec)
 		return fs.entries[name], fuse.OK
 	}
 	
@@ -144,8 +161,11 @@ func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 	cfg := fs.conf[dirname]
 	if cfg != nil {
 		for i := 1; i < len(cfg); i++ {
+			if cfg[i].Pattern == "" {
+				continue
+			}
 			if MatchFile(filename, cfg[i].Pattern) {
-				//fmt.Printf("getattr found dir rule %s: %v\n", name, cfg[i].Attr)
+				//fmt.Printf("getattr found dir rule for %s with command: %s\n", name, cfg[i].Exec)			
 				return cfg[i].Attr, fuse.OK
 				
 			}
@@ -171,7 +191,7 @@ func (fs *triggerFS) OpenDir(name string, context *fuse.Context) (stream []fuse.
 
 func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (file nodefs.File, code fuse.Status) {
 	name = "/" + name
-	fmt.Printf("open not found: %s\n", name)
+	
 	if flags&fuse.O_ANYWRITE != 0 {
 		return nil, fuse.EPERM
 	}
@@ -180,25 +200,28 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 	if dirname != "/" {
 		dirname = strings.TrimRight(dirname, "/")
 	}
+	
 	//match file
 	cfg := fs.conf[name]
 	if cfg != nil {
 		exec := PrepareCmd(cfg[0].Exec, name, filename)
-		fmt.Printf("Open file: %s\n",name)
+		fmt.Printf("Open file %s with command: %s\n", name, exec)
 		
 		content := ExecCmd(exec)
-		//fs.entries[name] = UpdateSize(fs.entries[name], len(content))
+		// resetting the size attribute because some programs are strict about the size given by getattr() to be the actual content size
+		// it depends on the given exec command for it to work as intended
+		fs.entries[name] = UpdateSize(fs.entries[name], len(content))
 		return nodefs.NewDataFile([]byte(content)), fuse.OK
 	}
 	
 	//match dir
 	cfg = fs.conf[dirname]
 	if cfg != nil {
-		fmt.Println("matched dir")
+		//fmt.Println("matched dir")
 		for i := 1; i < len(cfg); i++ {
 			if MatchFile(filename, cfg[i].Pattern) {
 				exec := PrepareCmd(cfg[i].Exec, name, filename)
-				fmt.Printf("Open match dir: %s\n",name)
+				fmt.Printf("Open match dir %s with command: %s\n", name, exec)
 				
 				content := ExecCmd(exec)
 				
@@ -209,6 +232,10 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 				////fs.conf[dirname][i].Attr = attr
 				//fs.conf[dirname][i].Attr = UpdateSize(fs.conf[dirname][i].Attr, len(content))
 				//fs.entries[name] = UpdateSize(fs.conf[dirname][i].Attr, len(content))
+				
+				// some programs are strict about the size given by getattr() to be the actual content size
+				// so we cache it to have the correct size at the second open request at least (depending on the exec command of cause)
+				fs.cache[name] = Cache{Attr: UpdateSize(fs.conf[dirname][i].Attr, len(content))}
 				//fmt.Printf("New Size of %s: %i\n",name,int(cfg[i].Attr.Size))
 				
 				return nodefs.NewDataFile([]byte(content)), fuse.OK
