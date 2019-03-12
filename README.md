@@ -1,17 +1,23 @@
 # TriggerFS
 
 A virtual FS using Go and Fuse native binding.
+<<<<<<< HEAD
 
 Execute configurable commands on read calls of files or patterns of filenames.
+=======
+>>>>>>> dev
 
-The Idea is to have a virtual readonly filesystem populated by files defined in a config and generate the contents on read accesses by running configurable commands and returning their output as content.
+Execute configurable commands that define the content of files or patterns of filenames on read calls.
+
+Have a virtual readonly filesystem defined by a config file and generate file contents on each read access
+by running configurable commands and returning their output as content.
 
 
 # Config
 
 create a config.conf file, the structure of the contents should look like this:
 ```
-# set the title of the running triggerFS instance
+# set the title of the running triggerFS instance (not implemented yet)
 title = "foofs"
 
 # cache the filesize after executing command
