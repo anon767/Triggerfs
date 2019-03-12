@@ -12,7 +12,7 @@ by running configurable commands and returning their output as content.
 
 create a config.conf file, the structure of the contents should look like this:
 ```
-# set the title of the running triggerFS instance (not implemented yet)
+# set the title of the running triggerFS instance (not implemented yet.)
 title = "foofs"
 
 # cache the filesize after executing command
