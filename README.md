@@ -1,11 +1,6 @@
 # TriggerFS
 
 A virtual FS using Go and Fuse native binding.
-<<<<<<< HEAD
-
-Execute configurable commands on read calls of files or patterns of filenames.
-=======
->>>>>>> dev
 
 Execute configurable commands that define the content of files or patterns of filenames on read calls.
 
