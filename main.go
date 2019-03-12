@@ -5,12 +5,11 @@ import (
 	"triggerfs/parser"
 	"flag"
 	"fmt"
-
+	"time"
 	"log"
-	"path/filepath"
+	
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
-	"github.com/davecgh/go-spew/spew"
 
 )
 
@@ -19,6 +18,11 @@ func main() {
 	//configfile := "config.json"
 	var configfile string
 	flag.StringVar(&configfile,"c", "config.conf", "Configfile")
+	var fuseopts string
+	flag.StringVar(&fuseopts,"fuseoptions", "", "Options for fuse")
+	debug := flag.Bool("debug", false, "print debugging messages.")
+	//version := flag.Bool("version", false, "print version.")
+	ttl := flag.Float64("ttl", 1.0, "attribute/entry cache TTL.")
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		log.Fatal("Usage:\n  triggerfs MOUNTPOINT")
@@ -31,61 +35,36 @@ func main() {
 	
 	fmt.Println("Generating filesystem")
 	fs := filesystem.NewTriggerFS()
+	fs.BaseConf["triggerFS"] = config
+	
 	for path, cfg := range config.Dir {
-		path = "/" + path
-		fmt.Printf("Add dir: %s\n", path)
+		//fmt.Printf("Add dir: %s\n", path)
 		attr := parser.ConfigToAttr(cfg, true)
-		fs.Add(path, "", cfg.Exec, attr)
+		fs.AddDir(path, attr)
 	}
 	for path, cfg := range config.File {
-		path = "/" + path
-		fmt.Printf("Add file: %s\n", path)
+		//fmt.Printf("Add file: %s\n", path)
 		attr := parser.ConfigToAttr(cfg, false)
-		fs.Add(path, "", cfg.Exec, attr)
+		fs.AddFile(path, cfg.Exec, attr)
 	}
 	for path, cfg := range config.Pattern {
-		path = "/" + path
-		dirpath, base := filepath.Split(path)
-		fmt.Printf("Add pattern: %s into %s\n", base, dirpath)
-		
-		dircfg := cfg
-		dircfg.Permission = "0755"
-		dircfg.Size = 4096
-		attr := parser.ConfigToAttr(dircfg, true)
-		fs.Add(dirpath, "", "", attr)
-		
-		
-		attr = parser.ConfigToAttr(cfg, false)
-		fs.Add(dirpath, base, cfg.Exec, attr)
+		//fmt.Printf("Add pattern: %s\n", path)
+		attr := parser.ConfigToAttr(cfg, false)
+		fs.AddPattern(path, cfg.Exec, attr)
 	}
-		
-		//if path[len(path)-1] == '/' {
-			//// directory
-			//path = strings.TrimRight(path, "/")
-			//attr := parser.ConfigToAttr(event[0], true)
-			//fs.Add(path, event[0].Pattern, event[0].Exec, attr)
-			//fmt.Printf("Add dir: %s\n", path)
-			//// multiple entries possible
-			//for i := 1; i < len(event); i++ {
-				//attr := parser.ConfigToAttr(event[i], false)
-				//fmt.Printf("Add dir rule: %s\n", event[i].Pattern)
-				//fs.Add(path, event[i].Pattern, event[i].Exec, attr)
-			//}
-		//} else {
-			//// file
-			//// only one entry per file definition allowed
-			//attr := parser.ConfigToAttr(event[0], false)
-			//fmt.Printf("Add file: %s\n", path)
-			//fs.Add(path, event[0].Pattern, event[0].Exec, attr)
-		//}
-	//}
 	
+	//spew.Dump(config)
 	
-	spew.Dump(fs)
-	spew.Dump(config)
-	fmt.Printf("Mounting on %s\n", mountpoint)
 	nfs := pathfs.NewPathNodeFs(fs, &pathfs.PathNodeFsOptions{ClientInodes: true})
-	server, _, err := nodefs.MountRoot(mountpoint, nfs.Root(), nil)
+	
+	fmt.Printf("Mounting on %s\n", mountpoint)
+	opts := &nodefs.Options{
+		AttrTimeout:  time.Duration(*ttl * float64(time.Second)),
+		EntryTimeout: time.Duration(*ttl * float64(time.Second)),
+		Debug:        *debug,
+	}
+	
+	server, _, err := nodefs.MountRoot(mountpoint, nfs.Root(), opts)
 	if err != nil {
 		log.Fatalf("Mount failed: %v\n", err)
 	}
