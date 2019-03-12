@@ -1,3 +1,4 @@
+- add config option to add already accessed files from patterns to the fs tree
 - implement fuse options
 - configuration to run command of file before mount to have the right size from the start
 - local socket or something to control the fs during runtime
