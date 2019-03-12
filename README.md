@@ -1,6 +1,7 @@
 # TriggerFS
 
 A virtual FS using Go and Fuse native binding.
+
 Execute configurable commands on read calls of files or patterns of filenames.
 
 The Idea is to have a virtual readonly filesystem populated by files defined in a config and generate the contents on read accesses by running configurable commands and returning their output as content.
