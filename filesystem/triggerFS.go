@@ -72,7 +72,7 @@ func (fs *triggerFS) AddFile(name string, exec string, attr *fuse.Attr) {
 	dir, base := filepath.Split(name)
 	
 	// run exec command to prebuild cache if enabled
-	if fs.BaseConf.PrebuildCache {
+	if fs.BaseConf["triggerFS"].PrebuildCache {
 		content := ExecCmd(exec)
 		fs.cache[name] = UpdateSize(attr, len(content))
 	}
