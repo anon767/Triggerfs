@@ -71,6 +71,12 @@ func (fs *triggerFS) AddFile(name string, exec string, attr *fuse.Attr) {
 	}
 	dir, base := filepath.Split(name)
 	
+	// run exec command to prebuild cache if enabled
+	if fs.BaseConf.PrebuildCache {
+		content := ExecCmd(exec)
+		fs.cache[name] = UpdateSize(attr, len(content))
+	}
+	
 	fs.conf[name] = append(fs.conf[name], Conf{Pattern: "", Exec: exec, Attr: attr})
 	fs.entries[name] = attr
 	fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: attr.Mode})

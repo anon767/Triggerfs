@@ -18,11 +18,14 @@ func main() {
 	//configfile := "config.json"
 	var configfile string
 	flag.StringVar(&configfile,"c", "config.conf", "Configfile")
+	flag.StringVar(&configfile,"config", "config.conf", "Configfile")
 	var fuseopts string
 	flag.StringVar(&fuseopts,"fuseoptions", "", "Options for fuse")
-	debug := flag.Bool("debug", false, "print debugging messages.")
+	debug := flag.Bool("debug", false, "print debugging messages")
+	nosizecache := flag.Bool("nosizecache", false, "disable filesize caching")
+	prebuildcache := flag.Bool("prebuildcache", false, "create sizecache by running all file exec commands once on startup")
 	//version := flag.Bool("version", false, "print version.")
-	ttl := flag.Float64("ttl", 1.0, "attribute/entry cache TTL.")
+	ttl := flag.Float64("ttl", 1.0, "attribute/entry cache TTL")
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		log.Fatal("Usage:\n  triggerfs MOUNTPOINT")
@@ -35,6 +38,15 @@ func main() {
 	
 	fmt.Println("Generating filesystem")
 	fs := filesystem.NewTriggerFS()
+	
+	// commandline args overwrite configfile options
+	if *nosizecache {
+		config.Caching = false
+	}	
+	if *prebuildcache {
+		config.PrebuildCache = true
+	}
+	
 	fs.BaseConf["triggerFS"] = config
 	
 	for path, cfg := range config.Dir {

@@ -21,6 +21,7 @@ type Config struct {
 	// triggerFS config
 	Title string `confl:"title"`
 	Caching bool `confl:"size_cache"`
+	PrebuildCache bool `confl:"prebuild_cache"`
 	//entries
 	File map[string]Entry
 	Dir map[string]Entry
