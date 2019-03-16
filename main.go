@@ -4,14 +4,15 @@ import (
 	"triggerfs/filesystem"
 	"triggerfs/parser"
 	"flag"
-	"fmt"
 	"time"
 	"log"
-	
+	"fmt"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
 
 )
+
+const VERSION string = "0.1"
 
 func main() {
 	
@@ -21,15 +22,23 @@ func main() {
 	flag.StringVar(&configfile,"config", "config.conf", "Configfile")
 	var fuseopts string
 	flag.StringVar(&fuseopts,"fuseoptions", "", "Options for fuse")
-	debug := flag.Bool("debug", false, "print debugging messages")
+	debug := flag.Bool("debug", false, "print fuse debugging messages")
 	nosizecache := flag.Bool("nosizecache", false, "disable filesize caching")
 	prebuildcache := flag.Bool("prebuildcache", false, "create sizecache by running all file exec commands once on startup")
-	//version := flag.Bool("version", false, "print version.")
+	version := flag.Bool("version", false, "print version and exit")
 	ttl := flag.Float64("ttl", 1.0, "attribute/entry cache TTL")
+	//loglevel := flag.Int("loglvl", 1, "set loglevel 1-3")
 	flag.Parse()
+	
+	if *version {
+		fmt.Printf("TriggerFS v%s\n", VERSION)
+		return
+	}
 	if len(flag.Args()) < 1 {
 		log.Fatal("Usage:\n  triggerfs MOUNTPOINT")
 	}
+	
+	//logger := stdlog.GetFromFlags()
 	
 	mountpoint := flag.Arg(0)
 		
@@ -50,17 +59,17 @@ func main() {
 	fs.BaseConf["triggerFS"] = config
 	
 	for path, cfg := range config.Dir {
-		//fmt.Printf("Add dir: %s\n", path)
+		//log.Printf("Add dir: %s\n", path)
 		attr := parser.ConfigToAttr(cfg, true)
 		fs.AddDir(path, attr)
 	}
 	for path, cfg := range config.File {
-		//fmt.Printf("Add file: %s\n", path)
+		//log.Printf("Add file: %s\n", path)
 		attr := parser.ConfigToAttr(cfg, false)
 		fs.AddFile(path, cfg.Exec, attr)
 	}
 	for path, cfg := range config.Pattern {
-		//fmt.Printf("Add pattern: %s\n", path)
+		//log.Printf("Add pattern: %s\n", path)
 		attr := parser.ConfigToAttr(cfg, false)
 		fs.AddPattern(path, cfg.Exec, attr)
 	}

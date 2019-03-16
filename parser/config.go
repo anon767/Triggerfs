@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"fmt"
+	"log"
 	"strconv" 
 	"github.com/lytics/confl"
 	"github.com/hanwen/go-fuse/fuse"
@@ -35,11 +35,9 @@ type Config struct {
 func Parseconfig(configFile string) (config Config) {
 	
 	var cfg Config
-	conf, err := confl.DecodeFile(configFile, &cfg)
+	_, err := confl.DecodeFile(configFile, &cfg)
 	if err != nil {
-	  fmt.Println("error unmarshalling")
-	  fmt.Println(conf)
-	  fmt.Println(err)
+	  log.Println("error decoding config: ",err)
 	}
 
 	return cfg

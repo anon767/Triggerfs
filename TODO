@@ -1,7 +1,7 @@
 - add config option to add already accessed files from patterns to the fs tree
 - add option to run command on getattr() to always get correct size
 - implement fuse options
-- configuration to run command of file before mount to have the right size from the start
+- configuration to run command of file before mount to have the right size from the start (done)
 - local socket or something to control the fs during runtime
 - forking out to exit main process for mount
 - sqlite cache for persistent attr and content cache by configuration

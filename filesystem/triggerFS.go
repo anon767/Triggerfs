@@ -73,14 +73,15 @@ func (fs *triggerFS) AddFile(name string, exec string, attr *fuse.Attr) {
 	
 	// run exec command to prebuild cache if enabled
 	if fs.BaseConf["triggerFS"].PrebuildCache {
-		content := ExecCmd(exec)
+		cmd := PrepareCmd(exec, name, base)
+		content := ExecCmd(cmd)
 		fs.cache[name] = UpdateSize(attr, len(content))
 	}
 	
 	fs.conf[name] = append(fs.conf[name], Conf{Pattern: "", Exec: exec, Attr: attr})
 	fs.entries[name] = attr
 	fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: attr.Mode})
-	fmt.Println("AddFile: ", name)
+	fmt.Println("Adding File: ", name)
 	
 	dirattr := &fuse.Attr{
 		Mode: fuse.S_IFDIR | 0755,
@@ -109,7 +110,7 @@ func (fs *triggerFS) AddDir(name string, attr *fuse.Attr) {
 		return
 	}
 	fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: attr.Mode})
-	fmt.Printf("AddDir: %s\n", name)
+	fmt.Printf("Adding Dir: %s\n", name)
 	
 	fs.AddDir(dir, attr)
 	
@@ -121,7 +122,7 @@ func (fs *triggerFS) AddPattern(name string, exec string, attr *fuse.Attr) {
 	dir = strings.TrimRight(dir, "/")
 
 	fs.conf[dir] = append(fs.conf[dir], Conf{Pattern: base, Exec: exec, Attr: attr})
-	fmt.Println("AddPattern: ", name)
+	fmt.Println("Adding Pattern: ", name)
 	
 	dirattr := &fuse.Attr{
 		Mode: fuse.S_IFDIR | 0755,
@@ -147,16 +148,16 @@ func (fs *triggerFS) CacheFileAttr(name string, attr *fuse.Attr, size int) bool 
 
 func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 
-	//fmt.Printf("getattr '%s'\n", name)
+	//log.Printf("getattr '%s'\n", name)
 	
 	// return cached attributes if it exist
 	if attr, ok := fs.cache[name]; ok {
-		//fmt.Printf("getattr cache %s: %v\n", name, c.Attr)
+		//log.Printf("getattr cache %s: %v\n", name, c.Attr)
 		return attr, fuse.OK
 	}
 	
 	if d := fs.entries[name]; d != nil {
-		//fmt.Printf("getattr found %s: %v\n", name, fs.conf[name])
+		//log.Printf("getattr found %s: %v\n", name, fs.conf[name])
 		return fs.entries[name], fuse.OK
 	}
 	
@@ -170,14 +171,14 @@ func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 				continue
 			}
 			if MatchFile(filename, cfg[i].Pattern) {
-				//fmt.Printf("getattr found dir rule for %s with command: %s\n", name, cfg[i].Exec)			
+				//log.Printf("getattr found dir rule for %s with command: %s\n", name, cfg[i].Exec)			
 				return cfg[i].Attr, fuse.OK
 				
 			}
 		}
 	}
 	//not found
-	//fmt.Printf("getattr not found %s: %v\n", name, context)
+	//log.Printf("getattr not found %s: %v\n", name, context)
 	return nil, fuse.ENOENT
 }
 
@@ -209,20 +210,20 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 		for i := 0; i < len(cfg); i++ {
 			if MatchFile(filename, cfg[i].Pattern) {
 				exec := PrepareCmd(cfg[i].Exec, name, filename)
-				//fmt.Printf("Open match dir %s with command: %s\n", name, exec)
+				//log.Printf("Open match dir %s with command: %s\n", name, exec)
 				content := ExecCmd(exec)
 				
 				// resetting the size of matched files. maybe we should do a fs.AddFile() here to index the called file
 				// some programs are strict about the size given by getattr() to be the actual content size
 				// so we cache it to have the correct size at the second open request at least (depending on the exec command of cause)
 				fs.CacheFileAttr(name, fs.conf[dirname][i].Attr, len(content))
-				//fmt.Printf("New Size of %s: %i\n",name,int(cfg[i].Attr.Size))
+				//log.Printf("New Size of %s: %i\n",name,int(cfg[i].Attr.Size))
 				return nodefs.NewDataFile([]byte(content)), fuse.OK
 			}
 		}
 	}
 	//not found
-	//fmt.Printf("open not found: %s\n", name)
+	//log.Printf("open not found: %s\n", name)
 	return nil, fuse.ENOENT
 }
 
@@ -247,7 +248,7 @@ func PrepareCmd(command string, path string, file string) string {
 
 
 func ExecCmd(command string) string {
-	//fmt.Printf("Executing: %s\n", command)
+	//log.Printf("Executing: %s\n", command)
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		log.Fatal(err)
