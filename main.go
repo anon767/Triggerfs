@@ -94,6 +94,7 @@ func main() {
 	
 	nfs := pathfs.NewPathNodeFs(fs, nil)
 	
+	fmt.Println(nfs.String())
 	fmt.Printf("Mounting on %s\n", mountpoint)
 	opts := &nodefs.Options{
 		AttrTimeout:  time.Duration(*ttl * float64(time.Second)),
@@ -105,12 +106,24 @@ func main() {
 			Gid: uint32(*gid),
 		},
 	}
-
-	server, _, err := nodefs.MountRoot(mountpoint, nfs.Root(), opts)
+	connector := nodefs.NewFileSystemConnector(nfs.Root(), opts)
+	
+	mountOpts := &fuse.MountOptions{
+		AllowOther:    true,
+		DisableXAttrs: true,
+		Debug:         *debug,
+		FsName:        "triggerFS",
+		Name:          config.Title,
+	}
+	server, err := fuse.NewServer(connector.RawFS(), mountpoint, mountOpts)
 	if err != nil {
 		log.Fatalf("Mount failed: %v\n", err)
 	}
+
 	
-	fmt.Println("Filesystem ready")
+	
+	fmt.Println("Filesystem ready.")
 	server.Serve()
 }
+
+
