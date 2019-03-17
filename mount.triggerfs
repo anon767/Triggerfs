@@ -3,11 +3,11 @@
 # Copyright (c) 2019 conray https://github.com/conraythefirst
 #
 # This file is part of TriggerFS
-
+echo $@
 . /etc/profile
 
 triggerfs_bin="/usr/bin/triggerfs"
-runas="/bin/su -l $USER -c "
+runas=$USER
 cmd_line=$triggerfs_bin
 
 get_options ()
@@ -17,8 +17,13 @@ get_options ()
         set -- $(echo ${pair}|sed 's/=/ /g')
         key=$1
         val=$2
-        if [ "$key" = "user" ]; then
-            runas="/bin/su -l $val -c "
+        if [ "$key" = "gid" ]; then
+			gid=$(getent group $val | cut -d ':' -f3)
+			cmd_line="$cmd_line -gid $gid"
+        elif [ "$key" = "uid" ]; then
+			uid=$(id -u $val)
+			cmd_line="$cmd_line -uid $uid"
+			runas=$(id -nu $val)
         elif [ "$key" = "sizecache" -a "$val" = "false" ]; then
             cmd_line="$cmd_line -nosizecache"
         fi
@@ -58,4 +63,10 @@ done
 # the main process should fork and exit the parent process
 # for now we &disown it
 #echo $runas "$triggerfs_bin -c $config $mountpoint" #2>&1 >/dev/null &disown
-$runas "$triggerfs_bin -c $config $mountpoint" 2>&1 >/dev/null &disown
+if [ "$EUID" -eq 0 ]
+then
+	runuser -l $runas -c "$triggerfs_bin -c $config $mountpoint" 2>&1 >/dev/null &disown
+else 
+	echo $triggerfs_bin -c $config $mountpoint 
+	$triggerfs_bin -c $config $mountpoint 2>&1 >/dev/null &disown
+fi

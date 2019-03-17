@@ -22,6 +22,7 @@ type Config struct {
 	Title string `confl:"title"`
 	Caching bool `confl:"size_cache"`
 	PrebuildCache bool `confl:"prebuild_cache"`
+	UpdateTree bool `confl:"update_tree"`
 	//entries
 	File map[string]Entry
 	Dir map[string]Entry
@@ -32,7 +33,7 @@ type Config struct {
 
 //type Config map[string][]Entry
 
-func Parseconfig(configFile string) (config Config) {
+func Parseconfig(configFile string) (Config) {
 	
 	var cfg Config
 	_, err := confl.DecodeFile(configFile, &cfg)

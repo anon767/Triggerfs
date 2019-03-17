@@ -19,20 +19,24 @@ const VERSION string = "0.1"
 
 func main() {
 	
-	//configfile := "config.json"
+	// configfile
 	var configfile string
 	flag.StringVar(&configfile,"c", "config.conf", "Configfile")
 	flag.StringVar(&configfile,"config", "config.conf", "Configfile")
-	var fuseopts string
-	flag.StringVar(&fuseopts,"fuseoptions", "", "Options for fuse")
-	debug := flag.Bool("debug", false, "print fuse debugging messages")
+	
+	// triggerFS options
 	nosizecache := flag.Bool("nosizecache", false, "disable filesize caching")
 	prebuildcache := flag.Bool("prebuildcache", false, "create sizecache by running all file exec commands once on startup")
+	updatetree := flag.Bool("updatetree", false, "add files matching patters to fs tree after they've been accessed once")
 	version := flag.Bool("version", false, "print version and exit")
-	ttl := flag.Float64("ttl", 1.0, "attribute/entry cache TTL")
+	//loglevel := flag.Int("loglvl", 1, "set loglevel 1-3")
+	
+	//fuse options
 	gid := flag.Int("gid", os.Geteuid(), "set group id")
 	uid := flag.Int("uid", os.Getgid(), "set user id")
-	//loglevel := flag.Int("loglvl", 1, "set loglevel 1-3")
+	debug := flag.Bool("debug", false, "print fuse debugging messages")
+	ttl := flag.Float64("ttl", 1.0, "attribute/entry cache TTL")
+	
 	flag.Parse()
 	
 	if *version {
@@ -40,18 +44,19 @@ func main() {
 		return
 	}
 	if len(flag.Args()) < 1 {
-		log.Fatal("Usage:\n  triggerfs MOUNTPOINT")
+		fmt.Println("Usage:\n  triggerfs [<arg>] MOUNTPOINT\n")
+		fmt.Println("Arguments:")
+		flag.PrintDefaults()
+		os.Exit(2)
+		
 	}
 	
 	//logger := stdlog.GetFromFlags()
 	
 	mountpoint := flag.Arg(0)
 		
-	fmt.Printf("Reading config:%s\n", configfile)
+	fmt.Printf("Reading config: %s\n", configfile)
 	config := parser.Parseconfig(configfile)
-	
-	fmt.Println("Generating filesystem")
-	fs := filesystem.NewTriggerFS()
 	
 	// commandline args overwrite configfile options
 	if *nosizecache {
@@ -59,8 +64,14 @@ func main() {
 	}	
 	if *prebuildcache {
 		config.PrebuildCache = true
+	}	
+	if *updatetree {
+		config.UpdateTree = true
 	}
 	
+	// make fs and attach config
+	fmt.Println("Generating filesystem")
+	fs := filesystem.NewTriggerFS()
 	fs.BaseConf["triggerFS"] = config
 	
 	for path, cfg := range config.Dir {
@@ -95,7 +106,6 @@ func main() {
 		},
 	}
 
-	fmt.Printf("%v %v %v",opts,uid,gid)
 	server, _, err := nodefs.MountRoot(mountpoint, nfs.Root(), opts)
 	if err != nil {
 		log.Fatalf("Mount failed: %v\n", err)

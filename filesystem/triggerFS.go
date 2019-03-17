@@ -73,9 +73,11 @@ func (fs *triggerFS) AddFile(name string, exec string, attr *fuse.Attr) {
 	
 	// run exec command to prebuild cache if enabled
 	if fs.BaseConf["triggerFS"].PrebuildCache {
-		cmd := PrepareCmd(exec, name, base)
-		content := ExecCmd(cmd)
-		fs.cache[name] = UpdateSize(attr, len(content))
+		if fs.cache[name] != nil {
+			cmd := PrepareCmd(exec, name, base)
+			content := ExecCmd(cmd)
+			fs.cache[name] = UpdateSize(attr, len(content))
+		}
 	}
 	
 	fs.conf[name] = append(fs.conf[name], Conf{Pattern: "", Exec: exec, Attr: attr})
@@ -95,7 +97,6 @@ func (fs *triggerFS) AddFile(name string, exec string, attr *fuse.Attr) {
 
 
 func (fs *triggerFS) AddDir(name string, attr *fuse.Attr) {
-
 	name = strings.TrimRight(name, "/")
 		
 	if fs.entries[name] != nil {
@@ -147,9 +148,6 @@ func (fs *triggerFS) CacheFileAttr(name string, attr *fuse.Attr, size int) bool 
 
 
 func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
-
-	//log.Printf("getattr '%s'\n", name)
-	
 	// return cached attributes if it exist
 	if attr, ok := fs.cache[name]; ok {
 		//log.Printf("getattr cache %s: %v\n", name, c.Attr)
@@ -217,6 +215,11 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 				// some programs are strict about the size given by getattr() to be the actual content size
 				// so we cache it to have the correct size at the second open request at least (depending on the exec command of cause)
 				fs.CacheFileAttr(name, fs.conf[dirname][i].Attr, len(content))
+				
+				// add matched file to fs tree after being opened once if enabled
+				if fs.BaseConf["triggerFS"].UpdateTree {
+					fs.AddFile(name, cfg[i].Exec, UpdateSize(fs.conf[dirname][i].Attr, len(content)))
+				}
 				//log.Printf("New Size of %s: %i\n",name,int(cfg[i].Attr.Size))
 				return nodefs.NewDataFile([]byte(content)), fuse.OK
 			}
@@ -237,6 +240,11 @@ func (fs *triggerFS) OpenDir(name string, context *fuse.Context) (stream []fuse.
 
 func (fs *triggerFS) Deletable() bool {
 	return false
+}
+
+
+func (fs *triggerFS) String() string {
+	return fs.BaseConf["triggerFS"].Title
 }
 
 
