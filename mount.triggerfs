@@ -7,8 +7,10 @@ echo $@
 . /etc/profile
 
 triggerfs_bin="/usr/bin/triggerfs"
+triggerfs_opts=""
 runas=$USER
 cmd_line=$triggerfs_bin
+log="/dev/null"
 
 get_options ()
 {
@@ -19,13 +21,19 @@ get_options ()
         val=$2
         if [ "$key" = "gid" ]; then
 			gid=$(getent group $val | cut -d ':' -f3)
-			cmd_line="$cmd_line -gid $gid"
+			triggerfs_opts="$triggerfs_opts -gid $gid"
         elif [ "$key" = "uid" ]; then
 			uid=$(id -u $val)
-			cmd_line="$cmd_line -uid $uid"
+			triggerfs_opts="$triggerfs_opts -uid $uid"
 			runas=$(id -nu $val)
         elif [ "$key" = "sizecache" -a "$val" = "false" ]; then
-            cmd_line="$cmd_line -nosizecache"
+            triggerfs_opts="$triggerfs_opts -nosizecache"
+        elif [ "$key" = "prebuildcache" -a "$val" = "true" ]; then
+            triggerfs_opts="$triggerfs_opts -prebuildcache"
+        elif [ "$key" = "updatetree" -a "$val" = "true" ]; then
+            triggerfs_opts="$triggerfs_opts -updatetree"
+        elif [ "$key" = "logfile"]; then
+            log=$val
         fi
     done
 }
@@ -48,7 +56,7 @@ while getopts "Vo:hns" opt; do
 			;;
 	   
 		V)
-			${cmd_line} -V
+			${triggerfs_bin} -version
 			exit 0
 			;;
 		h)
@@ -65,8 +73,8 @@ done
 #echo $runas "$triggerfs_bin -c $config $mountpoint" #2>&1 >/dev/null &disown
 if [ "$EUID" -eq 0 ]
 then
-	runuser -l $runas -c "$triggerfs_bin -c $config $mountpoint" 2>&1 >/dev/null &disown
+	runuser -l $runas -c "$triggerfs_bin $triggerfs_opts -config $config $mountpoint" 2>&1 >> $log &disown
 else 
-	echo $triggerfs_bin -c $config $mountpoint 
-	$triggerfs_bin -c $config $mountpoint 2>&1 >/dev/null &disown
+	echo $triggerfs_bin $triggerfs_opts -config $config $mountpoint 
+	$triggerfs_bin $triggerfs_opts -config $config $mountpoint 2>&1 >> $log &disown
 fi
