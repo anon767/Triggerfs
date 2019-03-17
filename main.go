@@ -7,12 +7,15 @@ import (
 	"time"
 	"log"
 	"fmt"
+	"os"
+	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
 
 )
 
 const VERSION string = "0.1"
+
 
 func main() {
 	
@@ -27,6 +30,8 @@ func main() {
 	prebuildcache := flag.Bool("prebuildcache", false, "create sizecache by running all file exec commands once on startup")
 	version := flag.Bool("version", false, "print version and exit")
 	ttl := flag.Float64("ttl", 1.0, "attribute/entry cache TTL")
+	gid := flag.Int("gid", os.Geteuid(), "set group id")
+	uid := flag.Int("uid", os.Getgid(), "set user id")
 	//loglevel := flag.Int("loglvl", 1, "set loglevel 1-3")
 	flag.Parse()
 	
@@ -76,15 +81,21 @@ func main() {
 	
 	//spew.Dump(config)
 	
-	nfs := pathfs.NewPathNodeFs(fs, &pathfs.PathNodeFsOptions{ClientInodes: true})
+	nfs := pathfs.NewPathNodeFs(fs, nil)
 	
 	fmt.Printf("Mounting on %s\n", mountpoint)
 	opts := &nodefs.Options{
 		AttrTimeout:  time.Duration(*ttl * float64(time.Second)),
 		EntryTimeout: time.Duration(*ttl * float64(time.Second)),
 		Debug:        *debug,
+		LookupKnownChildren: false,
+		Owner: &fuse.Owner{
+			Uid: uint32(*uid),
+			Gid: uint32(*gid),
+		},
 	}
-	
+
+	fmt.Printf("%v %v %v",opts,uid,gid)
 	server, _, err := nodefs.MountRoot(mountpoint, nfs.Root(), opts)
 	if err != nil {
 		log.Fatalf("Mount failed: %v\n", err)
