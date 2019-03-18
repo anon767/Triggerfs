@@ -21,12 +21,16 @@ func main() {
 	
 	// configfile
 	var configfile string
-	flag.StringVar(&configfile,"c", "config.conf", "Configfile")
-	flag.StringVar(&configfile,"config", "config.conf", "Configfile")
+	flag.StringVar(&configfile,"c", "config.conf", "config file")
+	flag.StringVar(&configfile,"config", "config.conf", "config file")
+	
+	// title
+	var title string
+	flag.StringVar(&configfile,"title", "", "set title of fs")
 	
 	// triggerFS options
-	nosizecache := flag.Bool("nosizecache", false, "disable filesize caching")
-	prebuildcache := flag.Bool("prebuildcache", false, "create sizecache by running all file exec commands once on startup")
+	nosizecache := flag.Bool("nosizecache", false, "disable file size caching")
+	prebuildcache := flag.Bool("prebuildcache", false, "create sizecache on startup")
 	updatetree := flag.Bool("updatetree", false, "add files matching patters to fs tree after they've been accessed once")
 	version := flag.Bool("version", false, "print version and exit")
 	//loglevel := flag.Int("loglvl", 1, "set loglevel 1-3")
@@ -59,6 +63,9 @@ func main() {
 	config := parser.Parseconfig(configfile)
 	
 	// commandline args overwrite configfile options
+	if title != "" {
+		config.Title = title
+	}	
 	if *nosizecache {
 		config.Caching = false
 	}	
@@ -68,6 +75,12 @@ func main() {
 	if *updatetree {
 		config.UpdateTree = true
 	}
+	
+	// set defaults
+	if config.Title == "" {
+		config.Title = "triggerfs"
+	}
+	
 	
 	// make fs and attach config
 	fmt.Println("Generating filesystem")
