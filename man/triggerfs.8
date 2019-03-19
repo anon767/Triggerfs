@@ -27,35 +27,35 @@ The file contents are defined on each read access by running the configured comm
 \fB\-c, \fB\-config <config file>\fR
 Config file to use (default: ./config.conf)
 \.TP
-\fB\-debug
+\fB\-debug\fR
 Enable fuse debug logging
 \.TP
-\fB\-gid GroupID
+\fB\-gid GroupID\fR
 Define the group id for the mountpoint. All files and directories will belong to the given group if not derfined otherwise. (defaults to the caller gid)
 \.TP
 \fB\-h, \fB\-help\fR
 Print a short help text
 \.TP
-\fB\-nosizecache
+\fB\-nosizecache\fR
 Disable the size cache. It is used to cache file attributes of all files that have been read at least once after mount.
 This is mostly done to provide a correct size attribute since most software is strict about the size given by getattr() and won't process larger contents.
 \.TP
-\fB\-prebuildcache
+\fB\-prebuildcache\fR
 Prebuild the size cache on startup by executing all commands from the file{} section in the config. Pattern definitions are not factored in at this point.
 \.TP
-\fB\-title TITLE
+\fB\-title TITLE\fR
 Set the title of the mount. Will show up in output of mount.
 \.TP
-\fB\-uid UserID
+\fB\-uid UserID\fR
 Define the user id for the mountpoint. All files and directories will be owned by the given user if not derfined otherwise. (defaults to the caller uid)
 \.TP
-\fB\-updatetree
+\fB\-updatetree\fR
 Add files from the pattern{} section, in the config, to the file system tree after they have been accessed once, so they show up in ls calls. (not yet implemented)
 \.TP
-\fB\-ttl float
+\fB\-ttl float\fR
 set fuse attribute/entry cache TTL (default: 1.0)
 \.TP
-\fB\-version
+\fB\-version\fR
 Print version and exit
 
 .PP
