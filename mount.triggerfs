@@ -26,14 +26,36 @@ get_options ()
 			uid=$(id -u $val)
 			triggerfs_opts="$triggerfs_opts -uid $uid"
 			runas=$(id -nu $val)
+			
         elif [ "$key" = "sizecache" -a "$val" = "false" ]; then
             triggerfs_opts="$triggerfs_opts -nosizecache"
+        elif [ "$key" = "sizecache" -a "$val" = "true" ]; then
+            triggerfs_opts="$triggerfs_opts -sizecache"
+            
         elif [ "$key" = "prebuildcache" -a "$val" = "true" ]; then
             triggerfs_opts="$triggerfs_opts -prebuildcache"
+        elif [ "$key" = "prebuildcache" -a "$val" = "false" ]; then
+            triggerfs_opts="$triggerfs_opts -noprebuildcache"
+        
         elif [ "$key" = "updatetree" -a "$val" = "true" ]; then
             triggerfs_opts="$triggerfs_opts -updatetree"
+        elif [ "$key" = "updatetree" -a "$val" = "false" ]; then
+            triggerfs_opts="$triggerfs_opts -noupdatetree"
+        
+        elif [ "$key" = "title"]; then
+            triggerfs_opts="$triggerfs_opts -title $val"
+            
+        elif [ "$key" = "loglevel"]; then
+            triggerfs_opts="$triggerfs_opts -loglvl $val"
+
+        elif [ "$key" = "ttl"]; then
+            triggerfs_opts="$triggerfs_opts -ttl $val"
+            
         elif [ "$key" = "logfile"]; then
             log=$val
+            
+        elif [ "$key" = "debug" -a "$val" = "true" ]; then
+            triggerfs_opts="$triggerfs_opts -debug"
         fi
     done
 }
