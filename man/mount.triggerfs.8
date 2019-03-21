@@ -1,0 +1,72 @@
+.\"  Copyright (c) 2019 conray <https://github.com/conraythefirst>>
+.\"  This file is part of triggerFS.
+.\"
+.\"  This file is licensed to you under your choice of the GNU Lesser
+.\"  General Public License, version 3 or any later version (LGPLv3 or
+.\"  later), or the GNU General Public License, version 2 (GPLv2), in all
+.\"  cases as published by the Free Software Foundation.
+.\"
+.\"
+.\"
+.TH triggerFS 8 "Trigger on Read File System" "18 March 2019" "TriggerFS"
+.SH NAME
+mount.triggerFS \- script to mount triggerfs
+.SH SYNOPSIS
+.B mount -t triggerfs <config file> <mountpoint> -o [<options>]
+.TP
+.B mount.triggerfs <config file> <mountpoint> -o [<options>]
+.PP
+.SH DESCRIPTION
+This tool is part of \fBtriggerfs\fR(8) package, which is used to mount using
+TriggerFS native binary.
+
+\fBmount.tiggerfs\fR is meant to be used by the mount(8) command for mounting
+native TriggerFS client. This subcommand, however, can also be used as a
+standalone command with limited functionality.
+
+.SH OPTIONS
+.PP
+.SS "Available options"
+.PP
+.TP
+\fBlogfile=\fRLOG-FILE
+File to use for logging [default: STDOUT]
+.TP
+\fBloglevel=\fR[0-3]
+Verbosity (default: 0)
+.TP
+\fBsizecache=\fRBOOL
+Enable/Disable size cache
+.TP
+\fBprebuildcache=\fRBOOL
+Enable/Disable prebuilding size cache
+.TP
+\fBupdatetree=\fRBOOL
+Enable/Disable updating fs tree with matched files
+.TP
+\fBdebug=\fRBOOL
+Enable/Disable fuse debug output
+.TP
+\fBuid=\fRUSER
+Set owner of mountpoint
+.TP
+\fBgid=\fRGROUP
+Set group of mountpoint
+.TP
+\fBtitle=\fRTITLE
+Set fs title
+.TP
+\fBloglevel=\fR0-3
+Set verbosity
+.TP
+\fBlogfile=\fRFILE
+Set log file
+.TP
+\fBttl=\fRFLOAT
+set fuse attribute/entry cache TTL
+.PP
+.SH SEE ALSO
+\fBfusermount\fR(8), \fBtriggerfs\fR(8)
+
+.SH COPYRIGHT
+Copyright(c) 2019  conray  <https://github.com/conraythefirst>

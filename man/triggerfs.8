@@ -36,12 +36,24 @@ Define the group id for the mountpoint. All files and directories will belong to
 \fB\-h, \fB\-help\fR
 Print a short help text
 \.TP
+\fB\-loglvl \fB INT\fR
+Set verbosity. Available levels: 0-3 (default: 0)
+\.TP
+\fB\-noprebuildcache\fR
+Disable prebuilding the size cache on startup.
+\.TP
 \fB\-nosizecache\fR
-Disable the size cache. It is used to cache file attributes of all files that have been read at least once after mount.
-This is mostly done to provide a correct size attribute since most software is strict about the size given by getattr() and won't process larger contents.
+Disable the size cache.
+\.TP
+\fB\-noupdatetree\fR
+Don't update fs tree after matching a file pattern (not yet implemented)
 \.TP
 \fB\-prebuildcache\fR
 Prebuild the size cache on startup by executing all commands from the file{} section in the config. Pattern definitions are not factored in at this point.
+\.TP
+\fB\-sizecache\fR
+Enable the size cache. It is used to cache file attributes of all files that have been read at least once after mount.
+This is mostly done to provide a correct size attribute since most software is strict about the size given by getattr() and won't process larger contents.
 \.TP
 \fB\-title TITLE\fR
 Set the title of the mount. Will show up in output of mount.
@@ -60,13 +72,13 @@ Print version and exit
 
 .PP
 .SH EXAMPLES
-mount a file system defined by /foo/triggerfs.conf on /foo/bar/ with enabled prebuild cache
+mount a file system defined by /foo/triggerfs.conf on /foo/bar/ with prebuild cache enabled:
 
 # triggerfs -prebuildcache -c /foo/triggerfs.conf /foo/bar/ 
 
 .SH SEE ALSO
 .nf
-\fBfusermount\fR(1), \fBmount.triggerfs\fR(8)
+\fBfusermount\fR(8), \fBmount.triggerfs\fR(8)
 \fR
 .fi
 .SH COPYRIGHT
