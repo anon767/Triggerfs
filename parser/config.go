@@ -23,6 +23,7 @@ type Config struct {
 	Caching bool `confl:"size_cache"`
 	PrebuildCache bool `confl:"prebuild_cache"`
 	UpdateTree bool `confl:"update_tree"`
+	LogLevel int `confl:"log_level"`
 	//entries
 	File map[string]Entry
 	Dir map[string]Entry
@@ -38,7 +39,7 @@ func Parseconfig(configFile string) (Config) {
 	var cfg Config
 	_, err := confl.DecodeFile(configFile, &cfg)
 	if err != nil {
-	  log.Println("error decoding config: ",err)
+	  log.Fatal("ERROR decoding config: ",err)
 	}
 
 	return cfg
