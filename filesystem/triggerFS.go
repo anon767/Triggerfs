@@ -42,7 +42,7 @@ type triggerFS struct {
 	conf map[string][]Conf
 	BaseConf map[string]parser.Config
 	cache map[string]*fuse.Attr
-	loglevel int
+	LogLevel int
 //	nextinode int
 }
 
@@ -55,7 +55,7 @@ func NewTriggerFS() *triggerFS {
 		conf:       make(map[string][]Conf),
 		BaseConf:   make(map[string]parser.Config),
 		cache:      make(map[string]*fuse.Attr),
-		loglevel:	0,
+		LogLevel:	0,
 //		nextinode:	0,
 	}
 }
@@ -72,12 +72,12 @@ func (fs *triggerFS) AddFile(name string, exec string, attr *fuse.Attr) {
 		return
 	}
 	
-	if fs.loglevel >= 1 {
+	if fs.LogLevel >= 1 {
 		log.Println("Adding File: ", name)
 	}
 	
 	dir, base := filepath.Split(name)
-	
+	dir = strings.TrimRight(dir, "/")
 	// run exec command to prebuild cache if enabled
 	if fs.BaseConf["triggerFS"].PrebuildCache {
 		if fs.cache[name] != nil {
@@ -90,7 +90,9 @@ func (fs *triggerFS) AddFile(name string, exec string, attr *fuse.Attr) {
 	fs.conf[name] = append(fs.conf[name], Conf{Pattern: "", Exec: exec, Attr: attr})
 	fs.entries[name] = attr
 	fs.dirs[dir] = append(fs.dirs[dir], fuse.DirEntry{Name: base, Mode: attr.Mode})
-	
+	if fs.LogLevel >= 3 {
+		log.Printf("Adding %s to %s: %v\n", base, dir, fs.dirs[dir])
+	}
 	
 	dirattr := &fuse.Attr{
 		Mode: fuse.S_IFDIR | 0755,
@@ -110,7 +112,7 @@ func (fs *triggerFS) AddDir(name string, attr *fuse.Attr) {
 		return
 	}
 	
-	if fs.loglevel >= 1 {
+	if fs.LogLevel >= 1 {
 		log.Printf("Adding Dir: %s\n", name)
 	}
 	
@@ -129,7 +131,7 @@ func (fs *triggerFS) AddDir(name string, attr *fuse.Attr) {
 
 
 func (fs *triggerFS) AddPattern(name string, exec string, attr *fuse.Attr) {
-	if fs.loglevel >= 1 {
+	if fs.LogLevel >= 1 {
 		log.Println("Adding Pattern: ", name)
 	}
 	
@@ -153,7 +155,7 @@ func (fs *triggerFS) CacheFileAttr(name string, attr *fuse.Attr, size int) bool 
 	if fs.BaseConf["triggerFS"].Caching {
 		attr.Size = uint64(size)
 		fs.cache[name] = attr
-		if fs.loglevel >= 3 {
+		if fs.LogLevel >= 3 {
 			log.Printf("caching attributes of file %s", name)
 		}
 		return true
@@ -166,14 +168,14 @@ func (fs *triggerFS) CacheFileAttr(name string, attr *fuse.Attr, size int) bool 
 func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 	// return cached attributes if it exist
 	if attr, ok := fs.cache[name]; ok {
-		if fs.loglevel >= 2 {
+		if fs.LogLevel >= 2 {
 			log.Printf("getattr found cache %s: %v\n", name, attr)
 		}
 		return attr, fuse.OK
 	}
 	
 	if d := fs.entries[name]; d != nil {
-		if fs.loglevel >= 2 {
+		if fs.LogLevel >= 2 {
 			log.Printf("getattr found file %s: %v\n", name, fs.entries[name])
 		}
 		return fs.entries[name], fuse.OK
@@ -189,7 +191,7 @@ func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 				continue
 			}
 			if MatchFile(filename, cfg[i].Pattern) {
-				if fs.loglevel >= 2 {
+				if fs.LogLevel >= 2 {
 					log.Printf("getattr found pattern for %s: %v\n", name, cfg[i].Attr)
 				}
 				return cfg[i].Attr, fuse.OK
@@ -198,7 +200,7 @@ func (fs *triggerFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 		}
 	}
 	//not found
-	if fs.loglevel >= 3 {
+	if fs.LogLevel >= 3 {
 		log.Printf("getattr not found %s: %v\n", name, context)
 	}
 	return nil, fuse.ENOENT
@@ -217,7 +219,7 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 	cfg := fs.conf[name]
 	if cfg != nil {
 		exec := PrepareCmd(cfg[0].Exec, name, filename)
-		if fs.loglevel >= 2 {
+		if fs.LogLevel >= 2 {
 			log.Printf("open file %s with command: %s\n", name, exec)
 		}
 		
@@ -234,7 +236,7 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 		for i := 0; i < len(cfg); i++ {
 			if MatchFile(filename, cfg[i].Pattern) {
 				exec := PrepareCmd(cfg[i].Exec, name, filename)
-				if fs.loglevel >= 2 {
+				if fs.LogLevel >= 2 {
 					log.Printf("open file %s through pattern %s with command: %s\n", name, cfg[i].Pattern, exec)
 				}
 				content := ExecCmd(exec)
@@ -246,11 +248,11 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 				
 				// add matched file to fs tree after being opened once if enabled
 				if fs.BaseConf["triggerFS"].UpdateTree {
-					if fs.loglevel >= 3 {
-						log.Printf("adding file %s to fs tree\n", name)
-					}
-				
+									
 					fs.AddFile(name, cfg[i].Exec, UpdateSize(fs.conf[dirname][i].Attr, len(content)))
+					if fs.LogLevel >= 2 {
+						log.Printf("added %s to fs tree in %s: %v\n", name, dirname, fs.dirs[dirname])
+					}
 				}
 				//log.Printf("New Size of %s: %i\n",name,int(cfg[i].Attr.Size))
 				return nodefs.NewDataFile([]byte(content)), fuse.OK
@@ -258,7 +260,7 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 		}
 	}
 	//not found
-	if fs.loglevel >= 3 {
+	if fs.LogLevel >= 3 {
 		log.Printf("open file not found: %s\n", name)
 	}
 	return nil, fuse.ENOENT
@@ -268,6 +270,9 @@ func (fs *triggerFS) Open(name string, flags uint32, context *fuse.Context) (fil
 func (fs *triggerFS) OpenDir(name string, context *fuse.Context) (stream []fuse.DirEntry, status fuse.Status) {
 
 	entries := fs.dirs[name]
+	if fs.LogLevel >= 3 {
+		log.Printf("open dir: %v\n", entries)
+	}
 	return entries, fuse.OK
 }
 

@@ -109,6 +109,7 @@ func main() {
 	log.Println("Generating filesystem")
 	fs := filesystem.NewTriggerFS()
 	fs.BaseConf["triggerFS"] = config
+	fs.LogLevel = *loglevel
 	
 	for path, cfg := range config.Dir {
 		attr := parser.ConfigToAttr(cfg, true)
