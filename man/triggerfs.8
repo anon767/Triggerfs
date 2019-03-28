@@ -31,7 +31,7 @@ Config file to use (default: ./config.conf)
 Enable fuse debug logging
 \.TP
 \fB\-gid GroupID\fR
-Define the group id for the mountpoint. All files and directories will belong to the given group if not derfined otherwise. (defaults to the caller gid)
+Define the group id of mountpoint. All files and directories will belong to the given group if not defined otherwise. (defaults to the caller gid)
 \.TP
 \fB\-h, \fB\-help\fR
 Print a short help text
@@ -40,7 +40,7 @@ Print a short help text
 Set verbosity. Available levels: 0-3 (default: 0)
 \.TP
 \fB\-noprebuildcache\fR
-Disable prebuilding the size cache on startup.
+Disable prebuilding size cache on startup.
 \.TP
 \fB\-nosizecache\fR
 Disable the size cache.
@@ -49,20 +49,20 @@ Disable the size cache.
 Don't update fs tree after matching a file pattern 
 \.TP
 \fB\-prebuildcache\fR
-Prebuild the size cache on startup by executing all commands from the file{} section in the config. Pattern definitions are not factored in at this point.
+Prebuild size cache on startup by executing all commands from the file{} section of the config. Pattern definitions are not factored in at this point.
 \.TP
 \fB\-sizecache\fR
 Enable the size cache. It is used to cache file attributes of all files that have been read at least once after mount.
 This is mostly done to provide a correct size attribute since most software is strict about the size given by getattr() and won't process larger contents.
 \.TP
 \fB\-title TITLE\fR
-Set the title of the mount. Will show up in output of mount.
+Set the title of the mount. Will show up in output of mount(8).
 \.TP
 \fB\-uid UserID\fR
-Define the user id for the mountpoint. All files and directories will be owned by the given user if not derfined otherwise. (defaults to the caller uid)
+Define owner of mountpoint. All files and directories will be owned by the given user if not derfined otherwise. (defaults to the caller uid)
 \.TP
 \fB\-updatetree\fR
-Add files from the pattern{} section, in the config, to the file system tree after they have been accessed once, so they show up in ls calls.
+Add files from the pattern{} section of the config, to the file system tree after they have been accessed once.
 \.TP
 \fB\-ttl float\fR
 set fuse attribute/entry cache TTL (default: 1.0)
@@ -74,11 +74,11 @@ Print version and exit
 .SH EXAMPLES
 mount a file system defined by /foo/triggerfs.conf on /foo/bar/ with prebuild cache enabled:
 
-# triggerfs -prebuildcache -c /foo/triggerfs.conf /foo/bar/ 
+# triggerfs -prebuildcache -config /foo/triggerfs.conf /foo/bar/ 
 
 .SH SEE ALSO
 .nf
-\fBfusermount\fR(8), \fBmount.triggerfs\fR(8)
+\fBfusermount\fR(8), \fBmount.triggerfs\fR(8), \fBmount\fR(8)
 \fR
 .fi
 .SH COPYRIGHT
