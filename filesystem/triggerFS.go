@@ -295,6 +295,9 @@ func PrepareCmd(command string, path string, file string) string {
 
 
 func ExecCmd(command string) string {
+	if fs.LogLevel >= 3 {
+		log.Printf("executing: %s\n", command)
+	}
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		log.Fatal(err)

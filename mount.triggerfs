@@ -3,7 +3,7 @@
 # Copyright (c) 2019 conray https://github.com/conraythefirst
 #
 # This file is part of TriggerFS
-echo $@
+
 . /etc/profile
 
 triggerfs_bin="/usr/bin/triggerfs"
@@ -97,6 +97,6 @@ if [ "$EUID" -eq 0 ]
 then
 	runuser -l $runas -c "$triggerfs_bin $triggerfs_opts -config $config $mountpoint" 2>&1 >> $log &disown
 else 
-	echo $triggerfs_bin $triggerfs_opts -config $config $mountpoint 
+#	echo $triggerfs_bin $triggerfs_opts -config $config $mountpoint 
 	$triggerfs_bin $triggerfs_opts -config $config $mountpoint 2>&1 >> $log &disown
 fi
