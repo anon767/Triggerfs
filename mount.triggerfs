@@ -1,0 +1,102 @@
+#!/bin/sh
+#
+# Copyright (c) 2019 conray https://github.com/conraythefirst
+#
+# This file is part of TriggerFS
+
+. /etc/profile
+
+triggerfs_bin="/usr/bin/triggerfs"
+triggerfs_opts=""
+runas=$USER
+cmd_line=$triggerfs_bin
+log="/dev/null"
+
+get_options ()
+{
+	local optarg=${1}
+    for pair in $(echo ${optarg}|sed 's/,/ /g'); do
+        set -- $(echo ${pair}|sed 's/=/ /g')
+        key=$1
+        val=$2
+        if [ "$key" = "gid" ]; then
+			gid=$(getent group $val | cut -d ':' -f3)
+			triggerfs_opts="$triggerfs_opts -gid $gid"
+        elif [ "$key" = "uid" ]; then
+			uid=$(id -u $val)
+			triggerfs_opts="$triggerfs_opts -uid $uid"
+			runas=$(id -nu $val)
+			
+        elif [ "$key" = "sizecache" -a "$val" = "false" ]; then
+            triggerfs_opts="$triggerfs_opts -nosizecache"
+        elif [ "$key" = "sizecache" -a "$val" = "true" ]; then
+            triggerfs_opts="$triggerfs_opts -sizecache"
+            
+        elif [ "$key" = "prebuildcache" -a "$val" = "true" ]; then
+            triggerfs_opts="$triggerfs_opts -prebuildcache"
+        elif [ "$key" = "prebuildcache" -a "$val" = "false" ]; then
+            triggerfs_opts="$triggerfs_opts -noprebuildcache"
+        
+        elif [ "$key" = "updatetree" -a "$val" = "true" ]; then
+            triggerfs_opts="$triggerfs_opts -updatetree"
+        elif [ "$key" = "updatetree" -a "$val" = "false" ]; then
+            triggerfs_opts="$triggerfs_opts -noupdatetree"
+        
+        elif [ "$key" = "title"]; then
+            triggerfs_opts="$triggerfs_opts -title $val"
+            
+        elif [ "$key" = "loglevel"]; then
+            triggerfs_opts="$triggerfs_opts -loglvl $val"
+
+        elif [ "$key" = "ttl"]; then
+            triggerfs_opts="$triggerfs_opts -ttl $val"
+            
+        elif [ "$key" = "logfile"]; then
+            log=$val
+            
+        elif [ "$key" = "debug" -a "$val" = "true" ]; then
+            triggerfs_opts="$triggerfs_opts -debug"
+        fi
+    done
+}
+
+if [ "x$(uname -s)" = "xLinux" ] ; then
+	config=$1
+	mountpoint=$2
+	cmd_line="$cmd_line -c $config $mountpoint"
+	
+	## `mount` specifies options as a last argument
+	shift 2;
+fi
+
+while getopts "Vo:hns" opt; do
+	case "${opt}" in
+		o)
+			get_options ${OPTARG}
+			options=${OPTARG}
+			shift 2
+			;;
+	   
+		V)
+			${triggerfs_bin} -version
+			exit 0
+			;;
+		h)
+			echo "Usage: $0 </path/to/config.conf> <mountpoint> -o <options>"
+			exit 0
+			;;
+		
+	esac
+done
+
+
+# the main process should fork and exit the parent process
+# for now we &disown it
+#echo $runas "$triggerfs_bin -c $config $mountpoint" #2>&1 >/dev/null &disown
+if [ "$EUID" -eq 0 ]
+then
+	runuser -l $runas -c "$triggerfs_bin $triggerfs_opts -config $config $mountpoint" 2>&1 >> $log &disown
+else 
+#	echo $triggerfs_bin $triggerfs_opts -config $config $mountpoint 
+	$triggerfs_bin $triggerfs_opts -config $config $mountpoint 2>&1 >> $log &disown
+fi

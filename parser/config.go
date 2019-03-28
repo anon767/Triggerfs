@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"fmt"
+	"log"
 	"strconv" 
 	"github.com/lytics/confl"
 	"github.com/hanwen/go-fuse/fuse"
@@ -21,6 +21,9 @@ type Config struct {
 	// triggerFS config
 	Title string `confl:"title"`
 	Caching bool `confl:"size_cache"`
+	PrebuildCache bool `confl:"prebuild_cache"`
+	UpdateTree bool `confl:"update_tree"`
+	LogLevel int `confl:"log_level"`
 	//entries
 	File map[string]Entry
 	Dir map[string]Entry
@@ -31,14 +34,12 @@ type Config struct {
 
 //type Config map[string][]Entry
 
-func Parseconfig(configFile string) (config Config) {
+func Parseconfig(configFile string) (Config) {
 	
 	var cfg Config
-	conf, err := confl.DecodeFile(configFile, &cfg)
+	_, err := confl.DecodeFile(configFile, &cfg)
 	if err != nil {
-	  fmt.Println("error unmarshalling")
-	  fmt.Println(conf)
-	  fmt.Println(err)
+	  log.Fatal("ERROR decoding config: ",err)
 	}
 
 	return cfg

@@ -1,0 +1,90 @@
+.\"  Copyright (c) 2019 conray <https://github.com/conraythefirst>>
+.\"  This file is part of triggerFS.
+.\"
+.\"  This file is licensed to you under your choice of the GNU Lesser
+.\"  General Public License, version 3 or any later version (LGPLv3 or
+.\"  later), or the GNU General Public License, version 2 (GPLv2), in all
+.\"  cases as published by the Free Software Foundation.
+.\"
+.\"
+.\"
+.TH triggerFS 8 "Trigger on Read File System" "18 March 2019" "TriggerFS"
+.SH NAME
+triggerFS \- trigger on read file system
+.SH SYNOPSIS
+.B triggerfs
+.I [options] [config] [mountpoint]
+.PP
+.SH DESCRIPTION
+TriggerFS is a virtual read only file system defined by a config file.
+It executes configurable commands that define the content of files or patterns of filenames on read calls.
+The file contents are defined on each read access by running the configured commands and returning their output as content.
+
+.SH OPTIONS
+
+.PP
+.TP
+\fB\-c, \fB\-config <config file>\fR
+Config file to use (default: ./config.conf)
+\.TP
+\fB\-debug\fR
+Enable fuse debug logging
+\.TP
+\fB\-gid GroupID\fR
+Define the group id of mountpoint. All files and directories will belong to the given group if not defined otherwise. (defaults to the caller gid)
+\.TP
+\fB\-h, \fB\-help\fR
+Print a short help text
+\.TP
+\fB\-loglvl \fB INT\fR
+Set verbosity. Available levels: 0-3 (default: 0)
+\.TP
+\fB\-noprebuildcache\fR
+Disable prebuilding size cache on startup.
+\.TP
+\fB\-nosizecache\fR
+Disable the size cache.
+\.TP
+\fB\-noupdatetree\fR
+Don't update fs tree after matching a file pattern 
+\.TP
+\fB\-prebuildcache\fR
+Prebuild size cache on startup by executing all commands from the file{} section of the config. Pattern definitions are not factored in at this point.
+\.TP
+\fB\-sizecache\fR
+Enable the size cache. It is used to cache file attributes of all files that have been read at least once after mount.
+This is mostly done to provide a correct size attribute since most software is strict about the size given by getattr() and won't process larger contents.
+\.TP
+\fB\-title TITLE\fR
+Set the title of the mount. Will show up in output of mount(8).
+\.TP
+\fB\-uid UserID\fR
+Define owner of mountpoint. All files and directories will be owned by the given user if not derfined otherwise. (defaults to the caller uid)
+\.TP
+\fB\-updatetree\fR
+Add files from the pattern{} section of the config, to the file system tree after they have been accessed once.
+\.TP
+\fB\-ttl float\fR
+set fuse attribute/entry cache TTL (default: 1.0)
+\.TP
+\fB\-version\fR
+Print version and exit
+
+.PP
+.SH EXAMPLES
+mount a file system defined by /foo/triggerfs.conf on /foo/bar/ with prebuild cache enabled:
+
+# triggerfs -prebuildcache -config /foo/triggerfs.conf /foo/bar/ 
+
+.SH SEE ALSO
+.nf
+\fBfusermount\fR(8), \fBmount.triggerfs\fR(8), \fBmount\fR(8)
+\fR
+.fi
+.SH COPYRIGHT
+.nf
+Copyright(c) 2019  conray  <https://github.com/conraythefirst>
+\fR
+.fi
+
+
