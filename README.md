@@ -119,4 +119,4 @@ cat mountpoint/testfile
 fusermount -u mountpoint
 ```
 
-[[https://github.com/anon767/Triggerfs][GitHub Mirror]]
+[Github Mirror](https://github.com/anon767/Triggerfs)
