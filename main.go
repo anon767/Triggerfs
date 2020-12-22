@@ -24,7 +24,7 @@ func main() {
 	
 	// title
 	var title string
-	flag.StringVar(&configfile,"title", "", "set title of fs")
+	flag.StringVar(&title,"title", "", "set title of fs")
 	
 	// triggerFS options
 	sizecache := flag.Bool("sizecache", false, "enable file size caching")
